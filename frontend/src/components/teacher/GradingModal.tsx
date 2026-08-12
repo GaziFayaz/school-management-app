@@ -3,7 +3,12 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface SubmissionData {
   id: string;
@@ -45,7 +50,7 @@ export default function GradingModal({ isOpen, onClose, submission }: GradingMod
     },
   });
 
-  if (!isOpen || !submission) return null;
+  if (!submission) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,33 +65,30 @@ export default function GradingModal({ isOpen, onClose, submission }: GradingMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-white">Grade Student Submission</h3>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Grade Student Submission</DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div>
-            <label className="block text-xs text-slate-400 font-medium mb-1">Student</label>
-            <div className="text-sm font-semibold text-white">{submission.studentName}</div>
+            <label className="block text-xs text-muted-foreground font-medium mb-1">Student</label>
+            <div className="text-sm font-semibold text-foreground">{submission.studentName}</div>
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 font-medium mb-1">Submission PDF</label>
-            <div className="text-xs text-sky-400 font-medium bg-sky-500/10 p-2.5 rounded-lg border border-sky-500/20 truncate">
+            <label className="block text-xs text-muted-foreground font-medium mb-1">Submission PDF</label>
+            <div className="text-xs text-primary font-medium bg-primary/10 p-2.5 rounded border border-primary/20 truncate">
               {submission.fileName}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-slate-300 font-medium mb-1">
+            <label className="block text-xs text-foreground font-medium mb-1">
               Marks (Max: {submission.assignmentMaxMarks})
             </label>
-            <input
+            <Input
               type="number"
               step="0.5"
               min="0"
@@ -94,41 +96,32 @@ export default function GradingModal({ isOpen, onClose, submission }: GradingMod
               value={marks}
               onChange={(e) => setMarks(parseFloat(e.target.value) || 0)}
               required
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-slate-300 font-medium mb-1">Teacher Feedback</label>
-            <textarea
+            <label className="block text-xs text-foreground font-medium mb-1">Teacher Feedback</label>
+            <Textarea
               rows={3}
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Provide constructive feedback for the student..."
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-sky-500 resize-none"
+              className="resize-none"
             />
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-300 text-xs rounded-lg flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMsg}</AlertDescription>
+            </Alert>
           )}
 
-          <div className="pt-2 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg border border-slate-700"
-            >
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={gradeMutation.isPending}
-              className="px-4 py-2 text-xs font-semibold bg-sky-500 hover:bg-sky-600 text-white rounded-lg flex items-center gap-1.5"
-            >
+            </Button>
+            <Button type="submit" disabled={gradeMutation.isPending}>
               {gradeMutation.isPending ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
@@ -138,10 +131,10 @@ export default function GradingModal({ isOpen, onClose, submission }: GradingMod
                   <CheckCircle className="w-3.5 h-3.5" /> Submit Grade
                 </>
               )}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -4,53 +4,91 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { LogOut, GraduationCap, User, BookOpen, ShieldCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
 
   if (!user) return null;
 
+  const initials = user.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'U';
+
   return (
-    <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-40">
+    <header className="bg-card border-b border-border text-card-foreground sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <GraduationCap className="h-8 w-8 text-sky-400" />
+          <GraduationCap className="h-7 w-7 text-primary" />
           <span className="font-bold text-lg tracking-tight">EduAssign Portal</span>
-          <span className="text-xs bg-sky-500/20 text-sky-300 font-medium px-2.5 py-0.5 rounded-full border border-sky-500/30">
+          <Badge variant="secondary" className="font-medium">
             {user.role}
-          </span>
+          </Badge>
         </div>
 
         <nav className="flex items-center space-x-4">
           {user.role === 'Admin' && (
-            <Link href="/admin/dashboard" className="text-slate-300 hover:text-white flex items-center gap-1.5 text-sm font-medium transition-colors">
-              <ShieldCheck className="w-4 h-4" /> Admin Console
-            </Link>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/admin/dashboard" className="flex items-center gap-1.5 text-sm font-medium">
+                <ShieldCheck className="w-4 h-4" /> Admin Console
+              </Link>
+            </Button>
           )}
           {user.role === 'Teacher' && (
-            <Link href="/teacher/dashboard" className="text-slate-300 hover:text-white flex items-center gap-1.5 text-sm font-medium transition-colors">
-              <BookOpen className="w-4 h-4" /> Teacher Assignments
-            </Link>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/teacher/dashboard" className="flex items-center gap-1.5 text-sm font-medium">
+                <BookOpen className="w-4 h-4" /> Teacher Assignments
+              </Link>
+            </Button>
           )}
           {user.role === 'Student' && (
-            <Link href="/student/dashboard" className="text-slate-300 hover:text-white flex items-center gap-1.5 text-sm font-medium transition-colors">
-              <GraduationCap className="w-4 h-4" /> My Assignments
-            </Link>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/student/dashboard" className="flex items-center gap-1.5 text-sm font-medium">
+                <GraduationCap className="w-4 h-4" /> My Assignments
+              </Link>
+            </Button>
           )}
 
-          <div className="h-4 w-px bg-slate-700 mx-2" />
+          <div className="h-4 w-px bg-border mx-2" />
 
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400 flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-slate-300" /> {user.name}
-            </span>
-            <button
-              onClick={logout}
-              className="flex items-center gap-1.5 text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium px-3 py-1.5 rounded-md transition-all border border-rose-500/30"
-            >
-              <LogOut className="w-3.5 h-3.5" /> Logout
-            </button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 p-1">
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-xs text-foreground font-medium flex items-center gap-1">
+                  {user.name}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+                Signed in as <span className="font-semibold text-foreground">{user.name}</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
+                <LogOut className="w-4 h-4 mr-2" /> Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
       </div>
     </header>
