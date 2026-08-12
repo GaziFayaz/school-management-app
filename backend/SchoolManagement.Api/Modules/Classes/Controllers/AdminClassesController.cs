@@ -28,6 +28,50 @@ public class AdminClassesController : ControllerBase
         return Ok(classes);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetClassDetail(Guid id)
+    {
+        var cls = await _db.Classes.FirstOrDefaultAsync(c => c.Id == id);
+        if (cls == null) return NotFound(new { message = "Class not found." });
+
+        var teacherAssignments = await _db.ClassSubjectTeachers
+            .Include(c => c.Teacher)
+            .Include(c => c.Subject)
+            .Where(c => c.ClassId == id)
+            .Select(c => new
+            {
+                c.Id,
+                c.TeacherId,
+                TeacherName = c.Teacher.Name,
+                TeacherEmail = c.Teacher.Email,
+                c.SubjectId,
+                SubjectName = c.Subject.Name,
+                SubjectCode = c.Subject.Code
+            })
+            .ToListAsync();
+
+        var studentEnrollments = await _db.ClassStudents
+            .Include(c => c.Student)
+            .Where(c => c.ClassId == id)
+            .Select(c => new
+            {
+                c.Id,
+                c.StudentId,
+                StudentName = c.Student.Name,
+                StudentEmail = c.Student.Email
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            cls.Id,
+            cls.Name,
+            cls.GradeLevel,
+            teacherAssignments,
+            studentEnrollments
+        });
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateClass([FromBody] CreateClassDto dto)
     {
@@ -41,6 +85,19 @@ public class AdminClassesController : ControllerBase
         await _db.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetClasses), new { id = newClass.Id }, newClass);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateClass(Guid id, [FromBody] CreateClassDto dto)
+    {
+        var cls = await _db.Classes.FindAsync(id);
+        if (cls == null) return NotFound(new { message = "Class not found." });
+
+        cls.Name = dto.Name;
+        cls.GradeLevel = dto.GradeLevel;
+
+        await _db.SaveChangesAsync();
+        return Ok(cls);
     }
 
     [HttpDelete("{id}")]

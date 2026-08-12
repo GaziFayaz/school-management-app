@@ -106,4 +106,26 @@ public class AdminAllocationsController : ControllerBase
 
         return Ok(enrollment);
     }
+
+    [HttpDelete("teacher-assignments/{id}")]
+    public async Task<IActionResult> UnassignTeacher(Guid id)
+    {
+        var assignment = await _db.ClassSubjectTeachers.FindAsync(id);
+        if (assignment == null) return NotFound(new { message = "Teacher assignment allocation not found." });
+
+        _db.ClassSubjectTeachers.Remove(assignment);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete("student-enrollments/{id}")]
+    public async Task<IActionResult> UnenrollStudent(Guid id)
+    {
+        var enrollment = await _db.ClassStudents.FindAsync(id);
+        if (enrollment == null) return NotFound(new { message = "Student enrollment allocation not found." });
+
+        _db.ClassStudents.Remove(enrollment);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
 }

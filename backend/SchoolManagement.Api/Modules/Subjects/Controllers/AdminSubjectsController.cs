@@ -48,11 +48,35 @@ public class AdminSubjectsController : ControllerBase
         return CreatedAtAction(nameof(GetSubjects), new { id = subject.Id }, subject);
     }
 
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateSubject(Guid id, [FromBody] CreateSubjectDto dto)
+    {
+        var subject = await _db.Subjects.FindAsync(id);
+        if (subject == null) return NotFound(new { message = "Subject not found." });
+
+        if (subject.Code != dto.Code && await _db.Subjects.AnyAsync(s => s.Code == dto.Code && s.Id != id))
+        {
+            return BadRequest(new { message = "Subject code is already in use." });
+        }
+
+        subject.Name = dto.Name;
+        subject.Code = dto.Code;
+
+        await _db.SaveChangesAsync();
+        return Ok(subject);
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSubject(Guid id)
     {
         var subject = await _db.Subjects.FindAsync(id);
         if (subject == null) return NotFound();
+
+        var inUse = await _db.ClassSubjectTeachers.AnyAsync(c => c.SubjectId == id);
+        if (inUse)
+        {
+            return BadRequest(new { message = "Cannot delete subject because it is currently assigned to one or more teachers." });
+        }
 
         _db.Subjects.Remove(subject);
         await _db.SaveChangesAsync();
