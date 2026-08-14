@@ -157,8 +157,8 @@ export default function StudentGradesTab() {
         header: 'Marks Awarded',
         accessorKey: 'marks',
         sortable: true,
-        headerClassName: 'min-w-[115px] whitespace-nowrap',
-        className: 'min-w-[115px] whitespace-nowrap',
+        headerClassName: 'min-w-[120px] whitespace-nowrap',
+        className: 'min-w-[120px] whitespace-nowrap',
         cell: (item) => {
           if (item.marks === null || item.marks === undefined) {
             return <span className="text-xs text-muted-foreground italic">Pending</span>;
@@ -171,46 +171,9 @@ export default function StudentGradesTab() {
         },
       },
       {
-        header: 'Score %',
-        accessorKey: 'percentage',
-        sortable: true,
-        headerClassName: 'min-w-[85px] whitespace-nowrap',
-        className: 'min-w-[85px] whitespace-nowrap',
-        cell: (item) => {
-          if (item.percentage === null || item.percentage === undefined) {
-            return (
-              <Badge variant="secondary" className="text-[10px] whitespace-nowrap font-medium">
-                Under Review
-              </Badge>
-            );
-          }
-
-          const pct = item.percentage;
-          if (pct >= 80) {
-            return (
-              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] whitespace-nowrap">
-                {pct}%
-              </Badge>
-            );
-          }
-          if (pct >= 50) {
-            return (
-              <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-[10px] whitespace-nowrap">
-                {pct}%
-              </Badge>
-            );
-          }
-          return (
-            <Badge variant="destructive" className="font-bold text-[10px] whitespace-nowrap">
-              {pct}%
-            </Badge>
-          );
-        },
-      },
-      {
         header: 'Teacher Feedback',
-        headerClassName: 'min-w-[200px]',
-        className: 'min-w-[200px]',
+        headerClassName: 'min-w-[220px]',
+        className: 'min-w-[220px]',
         cell: (item) => {
           if (!item.feedback) {
             return <span className="text-xs text-muted-foreground italic">None provided</span>;
@@ -218,7 +181,7 @@ export default function StudentGradesTab() {
           return (
             <button
               onClick={() => setSelectedFeedback(item)}
-              className="text-xs text-left text-muted-foreground hover:text-foreground line-clamp-1 max-w-[280px] flex items-center gap-1 group"
+              className="text-xs text-left text-muted-foreground hover:text-foreground line-clamp-1 max-w-[340px] flex items-center gap-1 group"
               title="Click to view full feedback"
             >
               <MessageSquare className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform shrink-0" />
