@@ -164,7 +164,8 @@ public class AdminAssignmentsController : ControllerBase
         var assignment = await _db.Assignments.FindAsync(id);
         if (assignment == null) return NotFound(new { message = "Assignment not found." });
 
-        _db.Assignments.Remove(assignment);
+        assignment.IsDeleted = true;
+        assignment.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return NoContent();
     }

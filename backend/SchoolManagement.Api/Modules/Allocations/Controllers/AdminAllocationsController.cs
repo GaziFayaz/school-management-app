@@ -60,8 +60,15 @@ public class AdminAllocationsController : ControllerBase
             TeacherId = dto.TeacherId
         };
 
-        _db.ClassSubjectTeachers.Add(allocation);
-        await _db.SaveChangesAsync();
+        try
+        {
+            _db.ClassSubjectTeachers.Add(allocation);
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "Teacher is already assigned to this class and subject." });
+        }
 
         return Ok(allocation);
     }
@@ -101,8 +108,15 @@ public class AdminAllocationsController : ControllerBase
             StudentId = dto.StudentId
         };
 
-        _db.ClassStudents.Add(enrollment);
-        await _db.SaveChangesAsync();
+        try
+        {
+            _db.ClassStudents.Add(enrollment);
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "Student is already enrolled in this class." });
+        }
 
         return Ok(enrollment);
     }

@@ -30,4 +30,6 @@ public class Submission
     public decimal? Marks { get; set; }
     public string? Feedback { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; } = false;
+    public DateTime? DeletedAt { get; set; }
 }

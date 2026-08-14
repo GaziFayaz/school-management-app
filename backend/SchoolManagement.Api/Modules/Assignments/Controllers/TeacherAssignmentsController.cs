@@ -199,7 +199,8 @@ public class TeacherAssignmentsController : ControllerBase
         var assignment = await _db.Assignments.FirstOrDefaultAsync(a => a.Id == id && a.TeacherId == teacherId);
         if (assignment == null) return NotFound();
 
-        _db.Assignments.Remove(assignment);
+        assignment.IsDeleted = true;
+        assignment.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return NoContent();
     }

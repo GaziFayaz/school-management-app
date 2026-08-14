@@ -75,14 +75,27 @@ public class AdminClassesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateClass([FromBody] CreateClassDto dto)
     {
+        var exists = await _db.Classes.AnyAsync(c => c.Name.ToLower() == dto.Name.Trim().ToLower() && c.GradeLevel.ToLower() == dto.GradeLevel.Trim().ToLower());
+        if (exists)
+        {
+            return BadRequest(new { message = "A class with this name and grade level already exists." });
+        }
+
         var newClass = new Class
         {
-            Name = dto.Name,
-            GradeLevel = dto.GradeLevel
+            Name = dto.Name.Trim(),
+            GradeLevel = dto.GradeLevel.Trim()
         };
 
-        _db.Classes.Add(newClass);
-        await _db.SaveChangesAsync();
+        try
+        {
+            _db.Classes.Add(newClass);
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "A class with this name and grade level already exists." });
+        }
 
         return CreatedAtAction(nameof(GetClasses), new { id = newClass.Id }, newClass);
     }
@@ -93,10 +106,24 @@ public class AdminClassesController : ControllerBase
         var cls = await _db.Classes.FindAsync(id);
         if (cls == null) return NotFound(new { message = "Class not found." });
 
-        cls.Name = dto.Name;
-        cls.GradeLevel = dto.GradeLevel;
+        var exists = await _db.Classes.AnyAsync(c => c.Id != id && c.Name.ToLower() == dto.Name.Trim().ToLower() && c.GradeLevel.ToLower() == dto.GradeLevel.Trim().ToLower());
+        if (exists)
+        {
+            return BadRequest(new { message = "A class with this name and grade level already exists." });
+        }
 
-        await _db.SaveChangesAsync();
+        cls.Name = dto.Name.Trim();
+        cls.GradeLevel = dto.GradeLevel.Trim();
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "A class with this name and grade level already exists." });
+        }
+
         return Ok(cls);
     }
 
@@ -106,7 +133,8 @@ public class AdminClassesController : ControllerBase
         var cls = await _db.Classes.FindAsync(id);
         if (cls == null) return NotFound();
 
-        _db.Classes.Remove(cls);
+        cls.IsDeleted = true;
+        cls.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return NoContent();
     }

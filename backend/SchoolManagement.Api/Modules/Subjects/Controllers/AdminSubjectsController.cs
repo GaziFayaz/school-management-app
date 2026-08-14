@@ -31,19 +31,26 @@ public class AdminSubjectsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateSubject([FromBody] CreateSubjectDto dto)
     {
-        if (await _db.Subjects.AnyAsync(s => s.Code == dto.Code))
+        if (await _db.Subjects.AnyAsync(s => s.Code.ToLower() == dto.Code.Trim().ToLower()))
         {
             return BadRequest(new { message = "Subject code already exists." });
         }
 
         var subject = new Subject
         {
-            Name = dto.Name,
-            Code = dto.Code
+            Name = dto.Name.Trim(),
+            Code = dto.Code.Trim().ToUpperInvariant()
         };
 
-        _db.Subjects.Add(subject);
-        await _db.SaveChangesAsync();
+        try
+        {
+            _db.Subjects.Add(subject);
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "Subject code already exists." });
+        }
 
         return CreatedAtAction(nameof(GetSubjects), new { id = subject.Id }, subject);
     }
@@ -54,15 +61,23 @@ public class AdminSubjectsController : ControllerBase
         var subject = await _db.Subjects.FindAsync(id);
         if (subject == null) return NotFound(new { message = "Subject not found." });
 
-        if (subject.Code != dto.Code && await _db.Subjects.AnyAsync(s => s.Code == dto.Code && s.Id != id))
+        if (subject.Code.ToLower() != dto.Code.Trim().ToLower() && await _db.Subjects.AnyAsync(s => s.Code.ToLower() == dto.Code.Trim().ToLower() && s.Id != id))
         {
             return BadRequest(new { message = "Subject code is already in use." });
         }
 
-        subject.Name = dto.Name;
-        subject.Code = dto.Code;
+        subject.Name = dto.Name.Trim();
+        subject.Code = dto.Code.Trim().ToUpperInvariant();
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "Subject code is already in use." });
+        }
+
         return Ok(subject);
     }
 
@@ -78,7 +93,8 @@ public class AdminSubjectsController : ControllerBase
             return BadRequest(new { message = "Cannot delete subject because it is currently assigned to one or more teachers." });
         }
 
-        _db.Subjects.Remove(subject);
+        subject.IsDeleted = true;
+        subject.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return NoContent();
     }

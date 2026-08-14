@@ -69,21 +69,24 @@ public class AdminUsersController : ControllerBase
         }
         else if (user.Role == UserRole.Student)
         {
-            var enrollment = await _db.ClassStudents
+            var enrollments = await _db.ClassStudents
                 .Include(c => c.Class)
-                .FirstOrDefaultAsync(c => c.StudentId == id);
+                .Where(c => c.StudentId == id)
+                .Select(c => new
+                {
+                    c.ClassId,
+                    ClassName = c.Class.Name,
+                    GradeLevel = c.Class.GradeLevel
+                })
+                .ToListAsync();
 
             var totalSubmissions = await _db.Submissions.CountAsync(s => s.StudentId == id);
             var gradedSubmissions = await _db.Submissions.CountAsync(s => s.StudentId == id && s.Status == Submissions.Models.SubmissionStatus.Graded);
 
             roleDetails = new
             {
-                enrolledClass = enrollment != null ? new
-                {
-                    enrollment.ClassId,
-                    ClassName = enrollment.Class.Name,
-                    GradeLevel = enrollment.Class.GradeLevel
-                } : null,
+                enrolledClass = enrollments.FirstOrDefault(), // Backward compatibility for single-class UI
+                enrolledClasses = enrollments,                // Full multi-class support
                 totalSubmissions,
                 gradedSubmissions
             };
@@ -116,8 +119,15 @@ public class AdminUsersController : ControllerBase
             Role = dto.Role
         };
 
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync();
+        try
+        {
+            _db.Users.Add(user);
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "Email is already registered." });
+        }
 
         return CreatedAtAction(nameof(GetUsers), new { id = user.Id }, new UserResponseDto(user.Id, user.Name, user.Email, user.Role.ToString(), user.CreatedAt));
     }
@@ -137,7 +147,14 @@ public class AdminUsersController : ControllerBase
         user.Email = dto.Email;
         user.Role = dto.Role;
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            return Conflict(new { message = "Email is already in use by another user." });
+        }
 
         return Ok(new UserResponseDto(user.Id, user.Name, user.Email, user.Role.ToString(), user.CreatedAt));
     }
@@ -148,7 +165,8 @@ public class AdminUsersController : ControllerBase
         var user = await _db.Users.FindAsync(id);
         if (user == null) return NotFound();
 
-        _db.Users.Remove(user);
+        user.IsDeleted = true;
+        user.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return NoContent();
     }
