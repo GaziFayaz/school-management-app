@@ -81,7 +81,7 @@ export default function StudentClassesTab() {
           return (
             <Card
               key={cls.classId}
-              className="border border-border/80 shadow-sm hover:border-primary/40 transition-all flex flex-col justify-between"
+              className="border border-border/80 shadow-sm hover:border-primary/40 transition-all flex flex-col"
             >
               <CardHeader className="pb-3 border-b border-border/60">
                 <div className="flex items-center justify-between">
@@ -102,65 +102,67 @@ export default function StudentClassesTab() {
                 </div>
               </CardHeader>
 
-              <CardContent className="pt-4 space-y-4">
-                {/* Coursework Summary Progress */}
-                <div className="p-3 bg-muted/40 rounded-lg border border-border/50 space-y-2 text-xs">
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="font-medium text-foreground">Coursework Progress</span>
-                    <span className="font-semibold text-foreground">
-                      {cls.completedAssignmentsCount} / {cls.totalAssignmentsCount} Completed ({progressPercent}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all duration-300"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Assigned Subjects & Teachers */}
-                <div className="space-y-2">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Subjects & Instructors:
-                  </span>
-                  {subjects.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic py-1">No subjects assigned yet.</p>
-                  ) : (
-                    <div className="space-y-2 pt-1">
-                      {subjects.map((sub) => (
-                        <div
-                          key={sub.subjectId + sub.teacherId}
-                          className="flex items-center justify-between p-2 rounded-md bg-muted/20 border border-border/40 text-xs"
-                        >
-                          <div className="space-y-0.5 overflow-hidden">
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" className="text-[10px] font-mono px-1 py-0 h-4 shrink-0">
-                                {sub.subjectCode}
-                              </Badge>
-                              <span className="font-medium text-foreground truncate">{sub.subjectName}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                              <User className="w-3 h-3 text-muted-foreground shrink-0" />
-                              <span className="truncate">{sub.teacherName}</span>
-                            </div>
-                          </div>
-
-                          {sub.teacherEmail && (
-                            <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-primary hover:text-primary shrink-0">
-                              <a href={`mailto:${sub.teacherEmail}`} title={`Email ${sub.teacherName}`}>
-                                <Mail className="w-3.5 h-3.5" />
-                              </a>
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+              <CardContent className="pt-4 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-4">
+                  {/* Coursework Summary Progress */}
+                  <div className="p-3 bg-muted/40 rounded-lg border border-border/50 space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span className="font-medium text-foreground">Coursework Progress</span>
+                      <span className="font-semibold text-foreground">
+                        {cls.completedAssignmentsCount} / {cls.totalAssignmentsCount} Completed ({progressPercent}%)
+                      </span>
                     </div>
-                  )}
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all duration-300"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Assigned Subjects & Teachers */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Subjects & Instructors:
+                    </span>
+                    {subjects.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic py-1">No subjects assigned yet.</p>
+                    ) : (
+                      <div className="space-y-2 pt-1">
+                        {subjects.map((sub) => (
+                          <div
+                            key={sub.subjectId + sub.teacherId}
+                            className="flex items-center justify-between p-2 rounded-md bg-muted/20 border border-border/40 text-xs"
+                          >
+                            <div className="space-y-0.5 overflow-hidden">
+                              <div className="flex items-center gap-1.5">
+                                <Badge variant="outline" className="text-[10px] font-mono px-1 py-0 h-4 shrink-0">
+                                  {sub.subjectCode}
+                                </Badge>
+                                <span className="font-medium text-foreground truncate">{sub.subjectName}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                <User className="w-3 h-3 text-muted-foreground shrink-0" />
+                                <span className="truncate">{sub.teacherName}</span>
+                              </div>
+                            </div>
+
+                            {sub.teacherEmail && (
+                              <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-primary hover:text-primary shrink-0">
+                                <a href={`mailto:${sub.teacherEmail}`} title={`Email ${sub.teacherName}`}>
+                                  <Mail className="w-3.5 h-3.5" />
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Footer Action */}
-                <div className="pt-3 border-t border-border/60">
+                <div className="pt-3 border-t border-border/60 mt-auto">
                   <Button asChild size="sm" className="w-full flex items-center justify-center gap-1.5">
                     <Link href={`/student/classes/${cls.classId}`}>
                       View Class Curriculum & Tasks <ArrowRight className="w-3.5 h-3.5 ml-1" />
