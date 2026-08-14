@@ -1,6 +1,6 @@
 # School Management App
 
-[![.NET](https://img.shields.io/badge/.NET-10.0%20%2F%208.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.0-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -97,11 +97,11 @@ The backend is built with **ASP.NET Core Web API** following a **Modular Vertica
 
 | **Layer** | **Technology** | **Description** |
 | :--- | :--- | :--- |
-| **Backend Framework** | **ASP.NET Core 8.0 / .NET 10.0** | High-performance C# RESTful Web API |
+| **Backend Framework** | **ASP.NET Core (.NET 10.0)** | High-performance C# RESTful Web API |
 | **Backend Architecture** | **Modular Vertical Slice** | Domain-organized modules (`Auth`, `Users`, `Classes`, `Subjects`, `Allocations`, `Assignments`, `Submissions`, `Overview`) |
 | **Authentication & Auth** | **JWT Bearer & Role Policies** | Token-based authentication with `Admin`, `Teacher`, `Student` authorization |
 | **API Documentation** | **OpenAPI & Scalar Reference** | Modern interactive API reference via `Scalar.AspNetCore` with Bearer auth support |
-| **ORM & Database** | **EF Core 8 / PostgreSQL (Npgsql)** | Relational database mapping with automated EF Core migrations and seeding |
+| **ORM & Database** | **EF Core / PostgreSQL (Npgsql)** | Relational database mapping with automated EF Core migrations and seeding |
 | **Cloud Object Storage** | **Cloudflare R2 (AWSSDK.S3)** | S3-compatible PDF file storage with local disk fallback |
 | **Backend Testing** | **xUnit & FluentAssertions** | 28 comprehensive unit tests covering auth, allocations, deadlines, file limits, and grading |
 | **Frontend Framework** | **Next.js 15 (App Router, React 19)** | Server and client components with TypeScript |
@@ -290,7 +290,7 @@ If you have PostgreSQL installed locally on your machine:
 ## 🚀 Instructions for Running the Application
 
 ### Prerequisites
-- **.NET SDK 8.0 or .NET 10.0+** ([Download .NET](https://dotnet.microsoft.com/download))
+- **.NET SDK 10.0+** ([Download .NET](https://dotnet.microsoft.com/download))
 - **Node.js v18.0+ & npm v9.0+** ([Download Node.js](https://nodejs.org/))
 - **Docker** (Optional, for running PostgreSQL via Docker Compose)
 
