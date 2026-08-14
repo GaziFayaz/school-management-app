@@ -9,12 +9,21 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Tests](https://img.shields.io/badge/Unit_Tests-28%20Passing-brightgreen?logo=xunit&logoColor=white)](backend/SchoolManagement.Tests)
 
+---
+
+## 🌐 Live Application
+- **Frontend**: [https://school-management-app-76fn.vercel.app](https://school-management-app-76fn.vercel.app)
+- **Backend API**: [https://school-management-app-urml.onrender.com/api](https://school-management-app-urml.onrender.com/api)
+
+---
+
 A comprehensive role-based **School Management App**. The application streamlines the academic lifecycle across administrators, educators, and learners—providing assignment creation, draft/publishing workflows, PDF answer sheet uploads, in-browser document preview, and grading with teacher feedback.
 
 ---
 
 ## 📑 Table of Contents
 
+- [Live Application](#-live-application)
 - [Project Overview](#-project-overview)
 - [Main Features](#-main-features)
   - [Admin Features](#1-administrator-portal)
