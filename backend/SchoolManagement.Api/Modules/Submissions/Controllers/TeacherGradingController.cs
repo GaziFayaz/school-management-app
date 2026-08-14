@@ -64,6 +64,42 @@ public class TeacherGradingController : ControllerBase
         return Ok(submissions);
     }
 
+    [HttpGet("{submissionId}")]
+    public async Task<IActionResult> GetSubmissionDetail(Guid submissionId)
+    {
+        var teacherId = GetTeacherId();
+
+        var submission = await _db.Submissions
+            .Include(s => s.Student)
+            .Include(s => s.Assignment)
+            .FirstOrDefaultAsync(s => s.Id == submissionId && s.Assignment.TeacherId == teacherId);
+
+        if (submission == null)
+        {
+            return NotFound(new { message = "Submission not found or unauthorized." });
+        }
+
+        return Ok(new
+        {
+            submission.Id,
+            submission.AssignmentId,
+            AssignmentTitle = submission.Assignment.Title,
+            AssignmentMaxMarks = submission.Assignment.MaxMarks,
+            submission.StudentId,
+            StudentName = submission.Student.Name,
+            StudentEmail = submission.Student.Email,
+            submission.FileUrl,
+            submission.FileKey,
+            submission.FileName,
+            submission.FileSize,
+            submission.SubmittedAt,
+            Status = submission.Status.ToString(),
+            submission.Marks,
+            submission.Feedback,
+            submission.UpdatedAt
+        });
+    }
+
     [HttpPost("{submissionId}/grade")]
     public async Task<IActionResult> GradeSubmission(Guid submissionId, [FromBody] GradeSubmissionDto dto)
     {

@@ -49,11 +49,58 @@ public class TeacherAssignmentsController : ControllerBase
                 a.SubjectId,
                 SubjectName = a.Subject.Name,
                 Status = a.Status.ToString(),
-                a.CreatedAt
+                SubmissionsCount = _db.Submissions.Count(s => s.AssignmentId == a.Id),
+                GradedSubmissionsCount = _db.Submissions.Count(s => s.AssignmentId == a.Id && s.Status == Submissions.Models.SubmissionStatus.Graded),
+                EnrolledStudentsCount = _db.ClassStudents.Count(cs => cs.ClassId == a.ClassId),
+                a.CreatedAt,
+                a.UpdatedAt
             })
             .ToListAsync();
 
         return Ok(assignments);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetAssignmentDetail(Guid id)
+    {
+        var teacherId = GetTeacherId();
+        var assignment = await _db.Assignments
+            .Include(a => a.Class)
+            .Include(a => a.Subject)
+            .Where(a => a.Id == id && a.TeacherId == teacherId)
+            .Select(a => new
+            {
+                a.Id,
+                a.Title,
+                a.Description,
+                a.Deadline,
+                a.MaxMarks,
+                a.ClassId,
+                ClassName = a.Class.Name,
+                ClassGradeLevel = a.Class.GradeLevel,
+                a.SubjectId,
+                SubjectName = a.Subject.Name,
+                SubjectCode = a.Subject.Code,
+                Status = a.Status.ToString(),
+                SubmissionsCount = _db.Submissions.Count(s => s.AssignmentId == a.Id),
+                GradedSubmissionsCount = _db.Submissions.Count(s => s.AssignmentId == a.Id && s.Status == Submissions.Models.SubmissionStatus.Graded),
+                PendingGradingCount = _db.Submissions.Count(s => s.AssignmentId == a.Id && s.Status == Submissions.Models.SubmissionStatus.Submitted),
+                EnrolledStudentsCount = _db.ClassStudents.Count(cs => cs.ClassId == a.ClassId),
+                AverageMarks = _db.Submissions
+                    .Where(s => s.AssignmentId == a.Id && s.Status == Submissions.Models.SubmissionStatus.Graded && s.Marks.HasValue)
+                    .Select(s => s.Marks)
+                    .Average(),
+                a.CreatedAt,
+                a.UpdatedAt
+            })
+            .FirstOrDefaultAsync();
+
+        if (assignment == null)
+        {
+            return NotFound(new { message = "Assignment not found or unauthorized." });
+        }
+
+        return Ok(assignment);
     }
 
     [HttpGet("my-allocations")]
