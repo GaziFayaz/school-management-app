@@ -139,7 +139,7 @@ app.MapScalarApiReference(options =>
         .WithTitle("School Management API Documentation")
         .WithTheme(ScalarTheme.Moon)
         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
-        .WithPreferredScheme("Bearer");
+        .AddPreferredSecuritySchemes("Bearer");
 });
 
 app.UseAuthentication();
