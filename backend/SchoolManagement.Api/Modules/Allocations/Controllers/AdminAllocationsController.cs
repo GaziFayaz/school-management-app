@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +8,16 @@ using SchoolManagement.Api.Modules.Users.Models;
 
 namespace SchoolManagement.Api.Modules.Allocations.Controllers;
 
-public record AssignTeacherDto(Guid ClassId, Guid SubjectId, Guid TeacherId);
-public record EnrollStudentDto(Guid ClassId, Guid StudentId);
+public record AssignTeacherDto(
+    [Required(ErrorMessage = "ClassId is required.")] Guid ClassId,
+    [Required(ErrorMessage = "SubjectId is required.")] Guid SubjectId,
+    [Required(ErrorMessage = "TeacherId is required.")] Guid TeacherId
+);
+
+public record EnrollStudentDto(
+    [Required(ErrorMessage = "ClassId is required.")] Guid ClassId,
+    [Required(ErrorMessage = "StudentId is required.")] Guid StudentId
+);
 
 [ApiController]
 [Route("api/admin/allocations")]

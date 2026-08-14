@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, extractApiErrorMessage } from '@/lib/api-client';
 import { useAuth } from '@/context/AuthContext';
-import { GraduationCap, KeyRound, Mail, AlertCircle, ArrowRight, ShieldCheck, UserCheck, BookOpen, Loader2 } from 'lucide-react';
+import { GraduationCap, KeyRound, Mail, AlertCircle, ArrowRight, ShieldCheck, UserCheck, BookOpen, Loader2, Info } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +15,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState<string | null>(null);
   const { user, isLoading, login } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('expired') === 'true') {
+        setSessionExpiredMsg('Your session has expired. Please sign in again to continue.');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -41,7 +51,7 @@ export default function LoginPage() {
       });
     },
     onError: (err: any) => {
-      setErrorMsg(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      setErrorMsg(extractApiErrorMessage(err, 'Login failed. Please check your credentials.'));
     },
   });
 
@@ -137,6 +147,13 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
+            {sessionExpiredMsg && (
+              <Alert className="bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400">
+                <Info className="h-4 w-4 text-amber-500" />
+                <AlertDescription>{sessionExpiredMsg}</AlertDescription>
+              </Alert>
+            )}
 
             {errorMsg && (
               <Alert variant="destructive">

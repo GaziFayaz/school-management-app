@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,10 @@ using SchoolManagement.Api.Modules.Classes.Models;
 
 namespace SchoolManagement.Api.Modules.Classes.Controllers;
 
-public record CreateClassDto(string Name, string GradeLevel);
+public record CreateClassDto(
+    [Required(ErrorMessage = "Class name is required."), StringLength(50, MinimumLength = 1, ErrorMessage = "Class name must be between 1 and 50 characters.")] string Name,
+    [Required(ErrorMessage = "Grade level is required."), StringLength(50, MinimumLength = 1, ErrorMessage = "Grade level must be between 1 and 50 characters.")] string GradeLevel
+);
 
 [ApiController]
 [Route("api/admin/classes")]
@@ -75,7 +79,10 @@ public class AdminClassesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateClass([FromBody] CreateClassDto dto)
     {
-        var exists = await _db.Classes.AnyAsync(c => c.Name.ToLower() == dto.Name.Trim().ToLower() && c.GradeLevel.ToLower() == dto.GradeLevel.Trim().ToLower());
+        var name = (dto.Name ?? string.Empty).Trim();
+        var gradeLevel = (dto.GradeLevel ?? string.Empty).Trim();
+
+        var exists = await _db.Classes.AnyAsync(c => c.Name.ToLower() == name.ToLower() && c.GradeLevel.ToLower() == gradeLevel.ToLower());
         if (exists)
         {
             return BadRequest(new { message = "A class with this name and grade level already exists." });
@@ -83,8 +90,8 @@ public class AdminClassesController : ControllerBase
 
         var newClass = new Class
         {
-            Name = dto.Name.Trim(),
-            GradeLevel = dto.GradeLevel.Trim()
+            Name = name,
+            GradeLevel = gradeLevel
         };
 
         try
@@ -106,14 +113,17 @@ public class AdminClassesController : ControllerBase
         var cls = await _db.Classes.FindAsync(id);
         if (cls == null) return NotFound(new { message = "Class not found." });
 
-        var exists = await _db.Classes.AnyAsync(c => c.Id != id && c.Name.ToLower() == dto.Name.Trim().ToLower() && c.GradeLevel.ToLower() == dto.GradeLevel.Trim().ToLower());
+        var name = (dto.Name ?? string.Empty).Trim();
+        var gradeLevel = (dto.GradeLevel ?? string.Empty).Trim();
+
+        var exists = await _db.Classes.AnyAsync(c => c.Id != id && c.Name.ToLower() == name.ToLower() && c.GradeLevel.ToLower() == gradeLevel.ToLower());
         if (exists)
         {
             return BadRequest(new { message = "A class with this name and grade level already exists." });
         }
 
-        cls.Name = dto.Name.Trim();
-        cls.GradeLevel = dto.GradeLevel.Trim();
+        cls.Name = name;
+        cls.GradeLevel = gradeLevel;
 
         try
         {

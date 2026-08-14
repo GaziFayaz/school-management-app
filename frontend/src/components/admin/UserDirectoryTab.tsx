@@ -49,6 +49,10 @@ export default function UserDirectoryTab() {
     mutationFn: (id: string) => deleteUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setMsg({ type: 'success', text: 'User account deleted successfully.' });
+    },
+    onError: (err: any) => {
+      setMsg({ type: 'error', text: err.response?.data?.message || 'Failed to delete user account.' });
     },
   });
 

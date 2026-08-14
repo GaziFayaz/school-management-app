@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolManagement.Api.BuildingBlocks.Auth;
@@ -6,7 +7,10 @@ using SchoolManagement.Api.Modules.Users.Models;
 
 namespace SchoolManagement.Api.Modules.Auth.Controllers;
 
-public record LoginRequest(string Email, string Password);
+public record LoginRequest(
+    [Required(ErrorMessage = "Email address is required."), EmailAddress(ErrorMessage = "Invalid email format.")] string Email,
+    [Required(ErrorMessage = "Password is required.")] string Password
+);
 public record AuthResponse(string Token, Guid Id, string Name, string Email, string Role);
 
 [ApiController]

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,10 @@ using SchoolManagement.Api.Modules.Submissions.Models;
 
 namespace SchoolManagement.Api.Modules.Submissions.Controllers;
 
-public record GradeSubmissionDto(decimal Marks, string Feedback);
+public record GradeSubmissionDto(
+    [Required(ErrorMessage = "Marks value is required."), Range(0, 10000, ErrorMessage = "Marks must be non-negative.")] decimal Marks,
+    string? Feedback
+);
 
 [ApiController]
 [Route("api/teacher/submissions")]
@@ -24,7 +28,11 @@ public class TeacherGradingController : ControllerBase
     private Guid GetTeacherId()
     {
         var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(idClaim!);
+        if (string.IsNullOrEmpty(idClaim) || !Guid.TryParse(idClaim, out var teacherId))
+        {
+            throw new UnauthorizedAccessException("Invalid or missing user identification in authentication token.");
+        }
+        return teacherId;
     }
 
     [HttpGet("assignment/{assignmentId}")]

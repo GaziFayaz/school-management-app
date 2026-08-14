@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +7,19 @@ using SchoolManagement.Api.Modules.Users.Models;
 
 namespace SchoolManagement.Api.Modules.Users.Controllers;
 
-public record CreateUserDto(string Name, string Email, string Password, UserRole Role);
-public record UpdateUserDto(string Name, string Email, UserRole Role);
+public record CreateUserDto(
+    [Required(ErrorMessage = "Name is required."), StringLength(100, MinimumLength = 2, ErrorMessage = "Name must be between 2 and 100 characters.")] string Name,
+    [Required(ErrorMessage = "Email is required."), EmailAddress(ErrorMessage = "Invalid email format.")] string Email,
+    [Required(ErrorMessage = "Password is required."), StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters long.")] string Password,
+    [Required(ErrorMessage = "Role is required.")] UserRole Role
+);
+
+public record UpdateUserDto(
+    [Required(ErrorMessage = "Name is required."), StringLength(100, MinimumLength = 2, ErrorMessage = "Name must be between 2 and 100 characters.")] string Name,
+    [Required(ErrorMessage = "Email is required."), EmailAddress(ErrorMessage = "Invalid email format.")] string Email,
+    [Required(ErrorMessage = "Role is required.")] UserRole Role
+);
+
 public record UserResponseDto(Guid Id, string Name, string Email, string Role, DateTime CreatedAt);
 
 [ApiController]
@@ -106,15 +118,16 @@ public class AdminUsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
     {
-        if (await _db.Users.AnyAsync(u => u.Email == dto.Email))
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        if (await _db.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail))
         {
             return BadRequest(new { message = "Email is already registered." });
         }
 
         var user = new User
         {
-            Name = dto.Name,
-            Email = dto.Email,
+            Name = dto.Name.Trim(),
+            Email = normalizedEmail,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role
         };
@@ -138,13 +151,14 @@ public class AdminUsersController : ControllerBase
         var user = await _db.Users.FindAsync(id);
         if (user == null) return NotFound(new { message = "User not found." });
 
-        if (user.Email != dto.Email && await _db.Users.AnyAsync(u => u.Email == dto.Email && u.Id != id))
+        var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+        if (user.Email.ToLower() != normalizedEmail && await _db.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail && u.Id != id))
         {
             return BadRequest(new { message = "Email is already in use by another user." });
         }
 
-        user.Name = dto.Name;
-        user.Email = dto.Email;
+        user.Name = dto.Name.Trim();
+        user.Email = normalizedEmail;
         user.Role = dto.Role;
 
         try

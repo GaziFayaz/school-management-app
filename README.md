@@ -1,141 +1,406 @@
 # Assignment & Submission Management System
 
-A role-based school/college Assignment and Submission Management System built for **OnnoRokom Projukti Limited**.
+[![.NET](https://img.shields.io/badge/.NET-10.0%20%2F%208.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.0-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![TanStack Query](https://img.shields.io/badge/TanStack%20Query-v5-FF4154?logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Tests](https://img.shields.io/badge/Unit_Tests-22%20Passing-brightgreen?logo=xunit&logoColor=white)](backend/SchoolManagement.Tests)
+
+A role-based school and college **Assignment & Submission Management System** designed and built for **OnnoRokom Projukti Limited**. The application streamlines the academic lifecycle across administrators, educators, and learners—providing assignment creation, draft/publishing workflows, PDF answer sheet uploads, in-browser document preview, and grading with teacher feedback.
 
 ---
 
-## 🚀 Tech Stack
+## 📑 Table of Contents
 
-### **Backend (`/backend`)**
-- **Framework**: ASP.NET Core 8.0 Web API (C#)
-- **Architecture Pattern**: **Modular Entity Pattern** (`Modules/Auth`, `Modules/Users`, `Modules/Classes`, `Modules/Subjects`, `Modules/Allocations`, `Modules/Assignments`, `Modules/Submissions`)
-- **Database**: PostgreSQL (Entity Framework Core 8) with In-Memory fallback for local dev
-- **Storage Service**: Cloudflare R2 Storage (S3-Compatible API) for PDF document storage (10MB max, `.pdf` format only)
-- **Authentication**: JWT Bearer Authentication & Role-Based Authorization (`Admin`, `Teacher`, `Student`)
-- **Testing**: xUnit Unit Testing suite covering authorization, file validation, deadline enforcement, and grading limits
-
-### **Frontend (`/frontend`)**
-- **Framework**: Next.js 15 (React 19, TypeScript)
-- **State Management & Caching**: **TanStack Query v5** (`@tanstack/react-query`) for API fetching, caching, and cache invalidation
-- **Styling**: Tailwind CSS & Lucide Icons
-- **Key Features**:
-  - **PDF Preview**: "Click to Preview" modal using embedded PDF viewer
-  - **Download PDF**: Direct download functionality for teacher and student answer files
-  - **PDF File Uploader**: Drag-and-Drop uploader with client-side 10MB limit and `.pdf` mime-type validation
-  - **Demo Credentials Quick-Fill**: 1-click login for Admin, Teacher, and Student roles
+- [Project Overview](#-project-overview)
+- [Main Features](#-main-features)
+  - [Admin Features](#1-administrator-portal)
+  - [Teacher Features](#2-teacher-portal)
+  - [Student Features](#3-student-portal)
+  - [Storage & Infrastructure](#4-storage--infrastructure)
+- [Technology Stack](#-technology-stack)
+- [Demo Login Credentials](#-demo-login-credentials)
+- [Project Architecture & Structure](#-project-architecture--structure)
+- [Environment Configuration](#-environment-configuration)
+- [Database Setup Instructions](#-database-setup-instructions)
+- [Instructions for Running the Application](#-instructions-for-running-the-application)
+  - [Running the Backend API](#1-running-the-backend-aspnet-core-web-api)
+  - [Running the Frontend](#2-running-the-frontend-nextjs)
+- [Instructions for Running Tests](#-instructions-for-running-tests)
+- [Assumptions & Design Decisions](#-assumptions--design-decisions)
+- [Known Limitations](#-known-limitations)
 
 ---
 
-## 🔑 Demo Login Credentials
+## 📖 Project Overview
 
-On first run, the database is automatically seeded with the following working demo accounts:
+The **Assignment & Submission Management System** is an enterprise-ready web application facilitating role-governed workflows for schools, colleges, and training academies. 
 
-| Role | Email | Password | Access Capabilities |
+It solves the end-to-end assignment workflow:
+1. **Administrators** establish the institutional structure by creating classes, subjects, user accounts, and mapping teacher allocations and student enrollments.
+2. **Teachers** author assignments for their assigned classes/subjects, manage draft and published states, inspect submitted student PDFs via an embedded reader, and award marks with qualitative feedback.
+3. **Students** view active assignments across enrolled classes, upload single PDF answer sheets with client/server validation, preview their submissions, and track grades and remarks.
+
+The backend is built with **ASP.NET Core Web API** following a **Modular Vertical Slice Architecture** backed by **PostgreSQL** (with Entity Framework Core Migrations) and **Cloudflare R2** object storage. The frontend is built with **Next.js 15 (App Router)**, **TypeScript**, and **TanStack Query v5** for optimistic caching and seamless UX.
+
+---
+
+## ✨ Main Features
+
+### 1. Administrator Portal
+- **User Management**: Full CRUD operations for `Admin`, `Teacher`, and `Student` accounts with email uniqueness validation and BCrypt password hashing.
+- **Class & Course Management**: Create, edit, and manage classes and grade levels with roster statistics.
+- **Subject Management**: Manage curriculum subjects and unique course codes (e.g., `MATH101`, `PHY201`).
+- **Teacher Allocations**: Assign teachers to specific class and subject pairings.
+- **Student Enrollments**: Enroll students into classes to grant access to corresponding coursework.
+- **Institutional Oversight**: Global view of all assignments and student submissions across all classes and departments.
+- **Analytics Dashboard**: Aggregated summary cards displaying total users, active classes, subjects, assignments, and schoolwide submission activity.
+
+### 2. Teacher Portal
+- **Assignment Lifecycle Management**: Create, update, soft-delete, draft, and publish assignments.
+- **Subject & Class Scoping**: Teachers can only create assignments for classes and subjects allocated to them.
+- **Assignment Parameters**: Configure assignment title, rich description, submission deadline (UTC), and maximum marks.
+- **Submission Roster**: View submitted student answer sheets, submission dates, file sizes, and grading status (`Submitted`, `Graded`, `Returned`).
+- **In-App PDF Preview & Download**: Instant inline PDF preview modal without leaving the page, plus direct file download capability.
+- **Grading & Feedback Modal**: Award marks with server-side validation ($0 \le \text{Marks} \le \text{MaxMarks}$) and provide personalized feedback comments.
+- **Teacher Dashboard**: Overview statistics of assigned classes, total assignments, and pending grading queue.
+
+### 3. Student Portal
+- **Enrolled Coursework View**: View enrolled classes, assigned teachers, and corresponding subjects.
+- **Assignment Discovery**: Discover active, upcoming, and past assignments with real-time deadline status and instructions.
+- **Drag-and-Drop PDF Uploader**: Custom uploader with client-side format validation (`application/pdf`) and size enforcement ($\le 10\text{ MB}$).
+- **Resubmission Support**: Students can re-upload/update their answer script any time before the deadline expires.
+- **Submission Document Preview**: Preview uploaded PDF submission directly in the browser or download a copy.
+- **Grades & Feedback Viewer**: Instant visibility into awarded marks, percentage scores, submission status, and teacher remarks.
+- **Student Dashboard**: Performance summary cards displaying total assignments, submitted tasks, and graded achievements.
+
+### 4. Storage & Infrastructure
+- **Cloudflare R2 Object Storage**: S3-compatible cloud storage for secure, scalable PDF storage.
+- **Local Disk Fallback**: If Cloudflare R2 credentials are not provided, the API automatically stores files in the local filesystem (`backend/SchoolManagement.Api/StorageUploads/`) for frictionless offline development.
+- **1-Click Quick-Fill Demo Buttons**: Pre-filled credentials on the login screen for instant role switching during review.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Description |
+| :--- | :--- | :--- |
+| **Backend Framework** | **ASP.NET Core 8.0 / .NET 10.0** | High-performance C# RESTful Web API |
+| **Backend Architecture** | **Modular Vertical Slice** | Domain-organized modules (`Auth`, `Users`, `Classes`, `Subjects`, `Allocations`, `Assignments`, `Submissions`, `Overview`) |
+| **Authentication & Auth** | **JWT Bearer & Role Policies** | Token-based authentication with `Admin`, `Teacher`, `Student` authorization |
+| **ORM & Database** | **EF Core 8 / PostgreSQL (Npgsql)** | Relational database mapping with automated EF Core migrations and seeding |
+| **Cloud Object Storage** | **Cloudflare R2 (AWSSDK.S3)** | S3-compatible PDF file storage with local disk fallback |
+| **Backend Testing** | **xUnit & FluentAssertions** | 22 comprehensive unit tests covering auth, allocations, deadlines, file limits, and grading |
+| **Frontend Framework** | **Next.js 15 (App Router, React 19)** | Server and client components with TypeScript |
+| **Server State & Caching**| **TanStack Query v5 (`@tanstack/react-query`)** | Client caching, optimistic updates, and automatic cache invalidation |
+| **Styling & UI Components**| **Tailwind CSS & Radix UI** | Modern responsive interface, modals, dropdowns, and data tables |
+| **Icons & Notifications** | **Lucide React & Sonner** | Consistent iconography and toast notifications |
+| **Containerization** | **Docker & Docker Compose** | Pre-configured container setup for PostgreSQL |
+
+---
+
+## 🔑 Demo Credentials
+
+Working credentials for all three application roles (automatically seeded on first startup):
+
+- **Admin Email**: `admin@school.com` &nbsp;|&nbsp; **Password**: `Admin@123`
+- **Teacher Email**: `teacher@school.com` &nbsp;|&nbsp; **Password**: `Teacher@123`
+- **Student Email**: `student@school.com` &nbsp;|&nbsp; **Password**: `Student@123`
+
+### Role & Access Matrix
+
+| Role | Email | Password | Access & Capabilities |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin@school.com` | `Admin@123` | Manage Users, Classes, Subjects, Teacher allocations, Student enrollments |
-| **Teacher** | `teacher@school.com` | `Teacher@123` | Create/edit assignments, Draft/Publish toggle, View student submissions, Preview & Download PDFs, Grade submissions |
-| **Student** | `student@school.com` | `Student@123` | View enrolled assignments, PDF upload (<10MB, .pdf only), Preview own submission, Download PDF, View marks & feedback |
+| 🛡️ **Admin** | `admin@school.com` | `Admin@123` | Full access: Users, Classes, Subjects, Allocations, Schoolwide Assignments & Submissions |
+| 👨‍🏫 **Teacher** | `teacher@school.com` | `Teacher@123` | Author assignments, Draft/Publish, Review submissions, In-app PDF preview, Grade & Feedback |
+| 🎓 **Student** | `student@school.com` | `Student@123` | View assignments, Upload/Update PDF (<10MB), Preview submission, View marks & remarks |
+
+> 💡 **Quick Login**: The frontend login page (`/login`) includes 1-click **Quick-Fill** buttons for Admin, Teacher, and Student to populate credentials instantly.
 
 ---
 
-## 🛠️ Quick Local Setup Instructions
+## 🌟 Optional Additions & Enhanced Capabilities
 
-### Prerequisites
-- **.NET SDK 8.0 / 10.0+**
-- **Node.js v18+ & npm**
-- **Docker & Docker Compose** (Optional for PostgreSQL)
+The project includes several optional enhancements to streamline evaluation and provide a production-grade experience:
 
-### 1. Database Setup (PostgreSQL)
-Run the PostgreSQL container via Docker Compose:
-```bash
-docker-compose up -d
-```
-
-*Note: If PostgreSQL is not running locally, the backend automatically falls back to an In-Memory database so you can test immediately without any database setup!*
-
----
-
-### 2. Running the Backend API
-
-```bash
-cd backend/SchoolManagement.Api
-dotnet run
-```
-- API will run at `http://localhost:5000` (or `https://localhost:5001`).
-- The database automatically migrates and seeds demo data on startup.
-
-#### Running Backend Unit Tests:
-```bash
-cd backend
-dotnet test --no-restore
-```
+1. **Interactive Swagger / OpenAPI Documentation**:
+   - **Swagger UI**: [http://localhost:5000/swagger](http://localhost:5000/swagger)
+   - **OpenAPI Specification**: `http://localhost:5000/swagger/v1/swagger.json`
+   - *Includes JWT Bearer Authorization header support for testing authenticated endpoints.*
+2. **Containerized PostgreSQL Environment**:
+   - Production-ready `docker-compose.yml` pre-configured to launch PostgreSQL 16 on port `5433`.
+3. **Automated Migrations & Rich Seeder**:
+   - Running the backend automatically applies all EF Core migrations via `MigrateAsync()` and seeds comprehensive demo data.
+4. **Cloudflare R2 Storage + Local Storage Fallback**:
+   - S3-compatible Cloudflare R2 integration for PDF storage with automatic fallback to local disk storage (`StorageUploads/`).
+5. **Interactive In-Browser PDF Preview Modal & Download**:
+   - Embedded PDF viewer enabling teachers and students to inspect submitted answer scripts directly in the app.
+6. **1-Click Demo Login Quick-Fill**:
+   - Instant credentials population on the login screen for testing each role.
 
 ---
 
-### 3. Running the Frontend (Next.js)
-
-```bash
-cd frontend
-npm run dev
-```
-- Open `http://localhost:3000` in your browser.
-- Use the quick-fill buttons on the login page to log in as **Admin**, **Teacher**, or **Student**.
-
----
-
-## 📁 Project Architecture & Folder Structure
+## 📁 Project Architecture & Structure
 
 ```text
 school-management-system/
-├── docker-compose.yml           # PostgreSQL container setup
-├── .env.example                 # Environment variables template
-├── README.md                    # Project documentation
+├── docker-compose.yml                  # PostgreSQL 16 container definition (Port 5433:5432)
+├── .env.example                        # Template for environment configuration variables
+├── README.md                           # Comprehensive documentation & setup instructions
 │
-├── backend/                     # ASP.NET Core 8 Web API
-│   ├── SchoolManagement.Api/
-│   │   ├── BuildingBlocks/
-│   │   │   ├── Auth/            # JWT Token Generator & Claims
-│   │   │   └── Storage/         # Cloudflare R2 Storage Service
-│   │   ├── Modules/             # Vertical Slice Entity Modules
-│   │   │   ├── Auth/
-│   │   │   ├── Users/
-│   │   │   ├── Classes/
-│   │   │   ├── Subjects/
-│   │   │   ├── Allocations/
-│   │   │   ├── Assignments/
-│   │   │   └── Submissions/
-│   │   └── Infrastructure/
-│   │       └── Data/            # AppDbContext & DatabaseSeeder
-│   └── SchoolManagement.Tests/  # xUnit Test Suite
+├── backend/                            # ASP.NET Core Web API Solution
+│   ├── SchoolManagement.slnx          # Solution file
+│   │
+│   ├── SchoolManagement.Api/           # Web API Project
+│   │   ├── appsettings.json           # Application configuration
+│   │   ├── Program.cs                 # App bootstrap, middleware, DI, & CORS
+│   │   │
+│   │   ├── BuildingBlocks/            # Cross-cutting foundational services
+│   │   │   ├── Auth/                  # JwtTokenGenerator, JwtOptions
+│   │   │   └── Storage/               # IStorageService, CloudflareR2StorageService
+│   │   │
+│   │   ├── Infrastructure/            # Persistence layer
+│   │   │   └── Data/                  # AppDbContext, DatabaseSeeder
+│   │   │
+│   │   └── Modules/                   # Vertical Slice Entity Modules
+│   │       ├── Auth/                  # AuthController, DTOs, Login/Me endpoints
+│   │       ├── Users/                 # AdminUsersController, User entity, DTOs
+│   │       ├── Classes/               # AdminClassesController, Teacher/Student controllers
+│   │       ├── Subjects/              # AdminSubjectsController, Subject entity
+│   │       ├── Allocations/           # AdminAllocationsController, ClassSubjectTeacher, ClassStudent
+│   │       ├── Assignments/           # TeacherAssignmentsController, AdminAssignmentsController
+│   │       ├── Submissions/           # StudentSubmissionsController, TeacherGradingController
+│   │       └── Overview/              # AdminOverviewController, Teacher & Student stats
+│   │
+│   └── SchoolManagement.Tests/         # xUnit Unit Testing Suite (22 Tests)
+│       ├── Auth/                      # AuthTests.cs (Login, JWT claims, 401 handling)
+│       ├── Assignments/               # TeacherAssignmentTests.cs, SoftDeleteAndConstraintsTests.cs
+│       └── Submissions/               # SubmissionWorkflowTests.cs, StudentPortalWorkflowTests.cs
 │
-└── frontend/                    # Next.js TypeScript App
-    ├── src/
-    │   ├── app/
-    │   │   ├── admin/dashboard/ # Admin Portal
-    │   │   ├── teacher/dashboard/# Teacher Portal
-    │   │   ├── student/dashboard/# Student Portal
-    │   │   └── login/           # Login Page
-    │   ├── components/
-    │   │   ├── layout/          # Navbar & ProtectedRoute
-    │   │   ├── pdf/             # PdfPreviewModal & PdfUploader
-    │   │   └── teacher/         # GradingModal
-    │   ├── context/             # AuthContext
-    │   └── lib/                 # Axios API Client
-    └── package.json
+└── frontend/                           # Next.js 15 TypeScript Application
+    ├── package.json                    # Dependencies & scripts
+    ├── next.config.ts                  # Next.js configuration
+    ├── tailwind.config.ts              # Tailwind CSS design system configuration
+    │
+    └── src/
+        ├── app/                        # Next.js App Router
+        │   ├── layout.tsx              # Root HTML & Providers layout
+        │   ├── globals.css             # Global styling & CSS custom properties
+        │   ├── providers.tsx           # TanStack Query Client Provider
+        │   ├── login/                  # Authentication page with Quick-Fill buttons
+        │   ├── admin/dashboard/        # Admin Management Portal (Users, Classes, Subjects, Allocations)
+        │   ├── teacher/                # Teacher Portal (Dashboard, Assignments, Classes)
+        │   └── student/                # Student Portal (Dashboard, Assignments, Classes)
+        │
+        ├── components/                 # Reusable UI & Feature Components
+        │   ├── admin/                  # OverviewTab, UserDirectoryTab, ClassDirectoryTab, AllocationManagerTab
+        │   ├── teacher/                # TeacherOverviewTab, TeacherAssignmentsTab, GradingModal
+        │   ├── student/                # StudentOverviewTab, StudentAssignmentsTab, StudentGradesTab
+        │   ├── pdf/                    # PdfUploader (Drag & Drop), PdfPreviewModal, PdfPreviewGradingModal
+        │   ├── layout/                 # Navbar, ProtectedRoute guard
+        │   └── ui/                     # Radix & Tailwind design primitives (Dialog, Tabs, Select, etc.)
+        │
+        ├── context/                    # React Context
+        │   └── AuthContext.tsx         # JWT token management & session state
+        │
+        └── lib/                        # Utilities & API Clients
+            ├── api-client.ts           # Axios instance with JWT Authorization interceptor
+            └── utils.ts                # Tailwind class merge & helper utilities
 ```
 
 ---
 
-## ☁️ Cloudflare R2 Storage Configuration
+## ⚙️ Environment Configuration
 
-To configure production Cloudflare R2 storage credentials, add the following keys to your backend `appsettings.json` or `.env`:
+The repository includes a template file `.env.example` demonstrating all configurable environment variables.
 
-```json
-"CloudflareR2": {
-  "ServiceUrl": "https://<account_id>.r2.cloudflarestorage.com",
-  "AccessKeyId": "YOUR_R2_ACCESS_KEY_ID",
-  "SecretAccessKey": "YOUR_R2_SECRET_ACCESS_KEY",
-  "BucketName": "school-assignment-submissions"
-}
+To customize settings, you can define environment variables or update `backend/SchoolManagement.Api/appsettings.json`:
+
+```properties
+# Database Configuration (PostgreSQL)
+ConnectionStrings__DefaultConnection=Host=localhost;Port=5433;Database=school_management_db;Username=postgres;Password=postgrespassword
+
+# JWT Authentication
+Jwt__SecretKey=SuperSecretKeyForAssignmentAndSubmissionManagementSystem2026!
+Jwt__Issuer=SchoolManagementApi
+Jwt__Audience=SchoolManagementApp
+Jwt__ExpiryMinutes=1440
+
+# Cloudflare R2 Cloud Storage (Optional - falls back to local storage if omitted)
+CloudflareR2__ServiceUrl=https://<account_id>.r2.cloudflarestorage.com
+CloudflareR2__AccessKeyId=your_cloudflare_r2_access_key_id
+CloudflareR2__SecretAccessKey=your_cloudflare_r2_secret_access_key
+CloudflareR2__BucketName=school-assignment-submissions
+CloudflareR2__PublicDomain=https://pub-<hash>.r2.dev
+
+# Frontend API URL
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
 ```
-*If Cloudflare R2 keys are omitted, the storage service gracefully falls back to local disk storage (`backend/SchoolManagement.Api/StorageUploads/`) for seamless local development.*
+
+> 🔒 **Security Best Practice**: No sensitive production credentials or API keys are committed to the repository.
+
+---
+
+## 🗄️ Database Setup Instructions
+
+### Option 1: Docker Compose (Recommended)
+A pre-configured `docker-compose.yml` is provided at the root of `school-management-system/`. Run:
+```bash
+# Start PostgreSQL container on port 5433
+docker-compose up -d
+```
+
+### Option 2: Local PostgreSQL Instance
+If you have PostgreSQL installed locally on your machine:
+1. Create a database named `school_management_db`.
+2. Update the connection string in `backend/SchoolManagement.Api/appsettings.json`:
+   ```json
+   "ConnectionStrings": {
+     "DefaultConnection": "Host=localhost;Port=5432;Database=school_management_db;Username=postgres;Password=yourpassword"
+   }
+   ```
+
+### Applying Migrations & Seeding Data
+- **Automatic (Default)**: Running the backend API (`dotnet run`) automatically applies all pending EF Core migrations (`MigrateAsync()`) and populates rich seed data on startup.
+- **Manual EF Core CLI (Optional)**: If you prefer applying migrations manually via the command line:
+  ```bash
+  # Ensure the dotnet-ef tool is installed
+  dotnet tool install --global dotnet-ef
+
+  # Apply migrations
+  cd backend/SchoolManagement.Api
+  dotnet ef database update
+  ```
+
+---
+
+## 🚀 Instructions for Running the Application
+
+### Prerequisites
+- **.NET SDK 8.0 or .NET 10.0+** ([Download .NET](https://dotnet.microsoft.com/download))
+- **Node.js v18.0+ & npm v9.0+** ([Download Node.js](https://nodejs.org/))
+- **Docker** (Optional, for running PostgreSQL via Docker Compose)
+
+---
+
+### 1. Running the Backend (ASP.NET Core Web API)
+
+1. Open a terminal and navigate to the API directory:
+   ```bash
+   cd backend/SchoolManagement.Api
+   ```
+
+2. Restore packages and run the API:
+   ```bash
+   dotnet run
+   ```
+
+3. The API will start and listen on:
+   - **API Endpoint**: `http://localhost:5000` (or `https://localhost:5001`)
+
+---
+
+### 2. Running the Frontend (Next.js)
+
+1. Open a new terminal and navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the Next.js development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser and navigate to:
+   - **Application URL**: `http://localhost:3000`
+   - Use the **Quick-Fill** buttons on `/login` to sign in as **Admin**, **Teacher**, or **Student**.
+
+---
+
+## 🧪 Instructions for Running Tests
+
+The solution includes an **xUnit Unit Test Suite** located in `backend/SchoolManagement.Tests/` covering core domain logic, security rules, and submission workflows.
+
+### 1. Execute Backend Unit Tests
+Navigate to the backend directory and run:
+```bash
+cd backend
+dotnet test
+```
+
+### Test Suite Coverage (22 / 22 Tests Passing):
+- **Authentication & Authorization (`Auth/AuthTests.cs`)**:
+  - Validates JWT generation and claims for `Admin`, `Teacher`, and `Student`.
+  - Rejects invalid credentials with `401 Unauthorized`.
+- **Teacher Assignment Workflows (`Assignments/TeacherAssignmentTests.cs`)**:
+  - Enforces teacher assignment allocation rules (teachers can only author assignments for assigned classes/subjects).
+  - Validates draft vs. published visibility.
+- **Data Integrity & Constraints (`Assignments/SoftDeleteAndConstraintsTests.cs`)**:
+  - Validates soft deletion constraints, preserving historical submission records.
+- **Submission & File Validation (`Submissions/SubmissionWorkflowTests.cs`)**:
+  - Rejects non-PDF file formats with `400 Bad Request`.
+  - Rejects files exceeding the 10 MB limit with `400 Bad Request`.
+  - Enforces deadline rules (blocks late submissions).
+  - Validates grading limits (rejects awarded marks exceeding maximum marks or below 0).
+- **Student Portal Workflows (`Submissions/StudentPortalWorkflowTests.cs`)**:
+  - Validates student enrollment scoping and resubmission replacement workflows before deadline.
+
+### 2. Validate Frontend Build & TypeScript
+Navigate to the frontend directory and run:
+```bash
+cd frontend
+npm run build
+```
+*(Verifies zero TypeScript compilation errors and static page generation across all routes).*
+
+---
+
+## 📌 Assumptions & Design Decisions
+
+In accordance with the project recruitment brief, the following assumptions and design decisions were made:
+
+1. **Teacher Assignment Scoping**:
+   - Teachers can only create assignments for combinations of classes and subjects they have been officially assigned to by an Administrator in the Allocations matrix.
+2. **Student Enrollment Scoping**:
+   - Students can only view and submit assignments for classes in which they are officially enrolled by an Administrator.
+3. **File Format & Size Constraints**:
+   - To ensure document standardization and security, all assignment submissions are strictly restricted to `.pdf` format (`application/pdf`) with a maximum allowable size of 10 MB (10,485,760 bytes).
+4. **Resubmission Window**:
+   - Students are permitted to update/re-submit their answer script as many times as necessary prior to the assignment deadline. The newest submission replaces the existing file. Once the deadline passes, submissions are strictly locked.
+5. **Grading Rules**:
+   - Teachers cannot assign negative marks or marks greater than the assignment's defined `MaxMarks`. Submissions transition through status states: `Submitted` $\rightarrow$ `Graded` $\rightarrow$ `Returned`.
+6. **Graceful Storage Fallback**:
+   - When Cloudflare R2 credentials are not configured, the storage service seamlessly writes files to the local disk (`StorageUploads/`), guaranteeing full functionality in offline or local evaluation environments without requiring third-party cloud accounts.
+7. **Automated Migrations & Rich Seeder**:
+   - On application startup, EF Core automatically applies all migration files and seeds a rich, relational demo dataset for immediate end-to-end evaluation.
+8. **Client-Side Caching with TanStack Query**:
+   - Used TanStack Query v5 to provide responsive, optimistic UI interactions, background synchronization, and automatic cache invalidation upon create/update actions.
+
+---
+
+## ⚠️ Known Limitations
+
+1. **Real-Time Push Notifications**:
+   - The application does not implement WebSockets / SignalR for instant push alerts; data synchronization is managed via TanStack Query's invalidation and refetching mechanisms.
+2. **Single-File Submissions**:
+   - Submissions currently accept a single `.pdf` document per assignment; multi-file attachments or zip archives are not supported.
+3. **Cloudflare R2 Direct URLs**:
+   - Direct public CDN downloads for R2 require setting `CloudflareR2__PublicDomain`; when using local storage fallback, files are served directly via API streaming endpoints.
+
+---
+
+## 📬 Project Submission Summary
+
+- **Project Name**: Assignment & Submission Management System
+- **Company**: OnnoRokom Projukti Limited
+- **Candidate Submission Link**: [https://q-rp.com/c/4CIs](https://q-rp.com/c/4CIs)
+- **Support Contact**: `hrd@onnorokom.com`

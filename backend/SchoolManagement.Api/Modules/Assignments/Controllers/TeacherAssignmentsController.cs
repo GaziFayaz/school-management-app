@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,8 +8,23 @@ using SchoolManagement.Api.Modules.Assignments.Models;
 
 namespace SchoolManagement.Api.Modules.Assignments.Controllers;
 
-public record CreateAssignmentDto(string Title, string Description, DateTime Deadline, decimal MaxMarks, Guid ClassId, Guid SubjectId, AssignmentStatus Status);
-public record UpdateAssignmentDto(string Title, string Description, DateTime Deadline, decimal MaxMarks, AssignmentStatus Status);
+public record CreateAssignmentDto(
+    [Required(ErrorMessage = "Title is required."), StringLength(200, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 200 characters.")] string Title,
+    [Required(ErrorMessage = "Description is required.")] string Description,
+    [Required(ErrorMessage = "Deadline is required.")] DateTime Deadline,
+    [Required(ErrorMessage = "Max marks is required."), Range(0.1, 10000, ErrorMessage = "Max marks must be greater than 0.")] decimal MaxMarks,
+    [Required(ErrorMessage = "ClassId is required.")] Guid ClassId,
+    [Required(ErrorMessage = "SubjectId is required.")] Guid SubjectId,
+    [Required(ErrorMessage = "Status is required.")] AssignmentStatus Status
+);
+
+public record UpdateAssignmentDto(
+    [Required(ErrorMessage = "Title is required."), StringLength(200, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 200 characters.")] string Title,
+    [Required(ErrorMessage = "Description is required.")] string Description,
+    [Required(ErrorMessage = "Deadline is required.")] DateTime Deadline,
+    [Required(ErrorMessage = "Max marks is required."), Range(0.1, 10000, ErrorMessage = "Max marks must be greater than 0.")] decimal MaxMarks,
+    [Required(ErrorMessage = "Status is required.")] AssignmentStatus Status
+);
 
 [ApiController]
 [Route("api/teacher/assignments")]
@@ -25,7 +41,11 @@ public class TeacherAssignmentsController : ControllerBase
     private Guid GetTeacherId()
     {
         var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(idClaim!);
+        if (string.IsNullOrEmpty(idClaim) || !Guid.TryParse(idClaim, out var teacherId))
+        {
+            throw new UnauthorizedAccessException("Invalid or missing user identification in authentication token.");
+        }
+        return teacherId;
     }
 
     [HttpGet]

@@ -76,6 +76,9 @@ export default function AllocationManagerTab() {
       queryClient.invalidateQueries({ queryKey: ['admin-allocations-teacher'] });
       setMsg({ type: 'success', text: 'Teacher unassigned successfully.' });
     },
+    onError: (err: any) => {
+      setMsg({ type: 'error', text: err.response?.data?.message || 'Failed to unassign teacher.' });
+    },
   });
 
   const enrollStudentMutation = useMutation({
@@ -96,6 +99,9 @@ export default function AllocationManagerTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-allocations-student'] });
       setMsg({ type: 'success', text: 'Student unenrolled successfully.' });
+    },
+    onError: (err: any) => {
+      setMsg({ type: 'error', text: err.response?.data?.message || 'Failed to unenroll student.' });
     },
   });
 

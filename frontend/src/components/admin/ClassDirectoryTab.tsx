@@ -52,6 +52,10 @@ export default function ClassDirectoryTab() {
     mutationFn: (id: string) => deleteClass(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-classes'] });
+      setMsg({ type: 'success', text: 'Class deleted successfully.' });
+    },
+    onError: (err: any) => {
+      setMsg({ type: 'error', text: err.response?.data?.message || 'Failed to delete class.' });
     },
   });
 
@@ -72,9 +76,10 @@ export default function ClassDirectoryTab() {
     mutationFn: (id: string) => deleteSubject(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-subjects'] });
+      setMsg({ type: 'success', text: 'Subject deleted successfully.' });
     },
     onError: (err: any) => {
-      setMsg({ type: 'error', text: err.response?.data?.message || 'Cannot delete subject in active use.' });
+      setMsg({ type: 'error', text: err.response?.data?.message || 'Failed to delete subject.' });
     },
   });
 

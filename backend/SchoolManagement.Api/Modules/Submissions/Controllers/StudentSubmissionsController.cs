@@ -28,7 +28,11 @@ public class StudentSubmissionsController : ControllerBase
     private Guid GetUserId()
     {
         var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(idClaim!);
+        if (string.IsNullOrEmpty(idClaim) || !Guid.TryParse(idClaim, out var userId))
+        {
+            throw new UnauthorizedAccessException("Invalid or missing user identification in authentication token.");
+        }
+        return userId;
     }
 
     [HttpGet("my-assignments")]
@@ -216,6 +220,14 @@ public class StudentSubmissionsController : ControllerBase
             return NotFound(new { message = "Published assignment not found." });
         }
 
+        // Verify student is enrolled in the class for this assignment
+        var isEnrolled = await _db.ClassStudents
+            .AnyAsync(cs => cs.ClassId == assignment.ClassId && cs.StudentId == studentId);
+        if (!isEnrolled)
+        {
+            return StatusCode(403, new { message = "You are not enrolled in the class for this assignment." });
+        }
+
         // Validate Deadline
         if (DateTime.UtcNow > assignment.Deadline)
         {
@@ -230,14 +242,39 @@ public class StudentSubmissionsController : ControllerBase
         }
 
         using var stream = file.OpenReadStream();
-        var uploadResult = await _storageService.UploadPdfAsync(stream, file.FileName, file.Length);
+
+        // Validate PDF Magic Bytes (%PDF- / 0x25, 0x50, 0x44, 0x46)
+        byte[] header = new byte[5];
+        var bytesRead = await stream.ReadAsync(header.AsMemory(0, 5));
+        if (bytesRead < 4 || header[0] != 0x25 || header[1] != 0x50 || header[2] != 0x44 || header[3] != 0x46)
+        {
+            return BadRequest(new { message = "The uploaded file is not a valid PDF document." });
+        }
+        stream.Position = 0; // Reset stream position for upload
+
+        StorageUploadResult uploadResult;
+        try
+        {
+            uploadResult = await _storageService.UploadPdfAsync(stream, file.FileName, file.Length);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(502, new { message = $"Failed to upload file to storage: {ex.Message}" });
+        }
 
         if (existingSubmission != null)
         {
             // Delete previous file from storage
             if (!string.IsNullOrEmpty(existingSubmission.FileKey))
             {
-                await _storageService.DeleteFileAsync(existingSubmission.FileKey);
+                try
+                {
+                    await _storageService.DeleteFileAsync(existingSubmission.FileKey);
+                }
+                catch
+                {
+                    // Non-critical cleanup failure
+                }
             }
 
             existingSubmission.FileUrl = uploadResult.FileUrl;
