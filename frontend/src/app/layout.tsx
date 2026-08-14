@@ -5,7 +5,7 @@ import Navbar from '@/components/layout/Navbar';
 
 export const metadata: Metadata = {
   title: 'Assignment & Submission Management System',
-  description: 'Role-based school assignment management system built for OnnoRokom Projukti',
+  description: 'Role-based school assignment and submission management system',
 };
 
 export default function RootLayout({

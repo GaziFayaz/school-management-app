@@ -9,7 +9,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Tests](https://img.shields.io/badge/Unit_Tests-28%20Passing-brightgreen?logo=xunit&logoColor=white)](backend/SchoolManagement.Tests)
 
-A role-based school and college **Assignment & Submission Management System** designed and built for **OnnoRokom Projukti Limited**. The application streamlines the academic lifecycle across administrators, educators, and learners—providing assignment creation, draft/publishing workflows, PDF answer sheet uploads, in-browser document preview, and grading with teacher feedback.
+A comprehensive role-based school and college **Assignment & Submission Management System**. The application streamlines the academic lifecycle across administrators, educators, and learners—providing assignment creation, draft/publishing workflows, PDF answer sheet uploads, in-browser document preview, and grading with teacher feedback.
 
 ---
 
@@ -125,7 +125,7 @@ Working credentials for all three application roles (automatically seeded on fir
 
 ## 🌟 Optional Additions & Enhanced Capabilities
 
-The project includes several optional enhancements to streamline evaluation and provide a production-grade experience:
+The project includes several architectural enhancements to provide a production-grade experience:
 
 1. **Interactive OpenAPI & Scalar API Documentation**:
    - **Scalar API Reference**: [http://localhost:5000/scalar/v1](http://localhost:5000/scalar/v1)
@@ -371,7 +371,7 @@ npm run build
 
 ## 📌 Assumptions & Design Decisions
 
-In accordance with the project recruitment brief, the following assumptions and design decisions were made:
+The following assumptions and design decisions guide the system architecture:
 
 1. **Teacher Assignment Scoping**:
    - Teachers can only create assignments for combinations of classes and subjects they have been officially assigned to by an Administrator in the Allocations matrix.
@@ -400,12 +400,3 @@ In accordance with the project recruitment brief, the following assumptions and 
    - Submissions currently accept a single `.pdf` document per assignment; multi-file attachments or zip archives are not supported.
 3. **Cloudflare R2 Direct URLs**:
    - Direct public CDN downloads for R2 require setting `CloudflareR2__PublicDomain`; when using local storage fallback, files are served directly via API streaming endpoints.
-
----
-
-## 📬 Project Submission Summary
-
-- **Project Name**: Assignment & Submission Management System
-- **Company**: OnnoRokom Projukti Limited
-- **Candidate Submission Link**: [https://q-rp.com/c/4CIs](https://q-rp.com/c/4CIs)
-- **Support Contact**: `hrd@onnorokom.com`
