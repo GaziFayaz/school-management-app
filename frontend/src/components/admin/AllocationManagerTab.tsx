@@ -139,72 +139,74 @@ export default function AllocationManagerTab() {
       {/* Creation Forms Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Assign Teacher Form */}
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" /> Assign Teacher to Class & Subject
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex flex-col">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 assignTeacherMutation.mutate();
               }}
-              className="space-y-3"
+              className="flex-1 flex flex-col justify-between space-y-4"
             >
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Target Class</label>
-                <select
-                  value={allocClassId}
-                  onChange={(e) => setAllocClassId(e.target.value)}
-                  required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">Select Class</option>
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.gradeLevel})
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Target Class</label>
+                  <select
+                    value={allocClassId}
+                    onChange={(e) => setAllocClassId(e.target.value)}
+                    required
+                    className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">Select Class</option>
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.gradeLevel})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Subject</label>
+                  <select
+                    value={allocSubjectId}
+                    onChange={(e) => setAllocSubjectId(e.target.value)}
+                    required
+                    className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">Select Subject</option>
+                    {subjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Teacher</label>
+                  <select
+                    value={allocTeacherId}
+                    onChange={(e) => setAllocTeacherId(e.target.value)}
+                    required
+                    className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">Select Teacher Account</option>
+                    {teachersList.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Subject</label>
-                <select
-                  value={allocSubjectId}
-                  onChange={(e) => setAllocSubjectId(e.target.value)}
-                  required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">Select Subject</option>
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Teacher</label>
-                <select
-                  value={allocTeacherId}
-                  onChange={(e) => setAllocTeacherId(e.target.value)}
-                  required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">Select Teacher Account</option>
-                  {teachersList.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button type="submit" disabled={assignTeacherMutation.isPending} className="w-full text-xs">
+              <Button type="submit" disabled={assignTeacherMutation.isPending} className="w-full text-xs mt-auto">
                 Assign Teacher
               </Button>
             </form>
@@ -212,55 +214,57 @@ export default function AllocationManagerTab() {
         </Card>
 
         {/* Enroll Student Form */}
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-primary" /> Enroll Student into Class
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex flex-col">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 enrollStudentMutation.mutate();
               }}
-              className="space-y-3"
+              className="flex-1 flex flex-col justify-between space-y-4"
             >
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Target Class</label>
-                <select
-                  value={enrollClassId}
-                  onChange={(e) => setEnrollClassId(e.target.value)}
-                  required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">Select Class</option>
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.gradeLevel})
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Target Class</label>
+                  <select
+                    value={enrollClassId}
+                    onChange={(e) => setEnrollClassId(e.target.value)}
+                    required
+                    className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">Select Class</option>
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.gradeLevel})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Student</label>
+                  <select
+                    value={enrollStudentId}
+                    onChange={(e) => setEnrollStudentId(e.target.value)}
+                    required
+                    className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">Select Student Account</option>
+                    {studentsList.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs text-muted-foreground mb-1">Student</label>
-                <select
-                  value={enrollStudentId}
-                  onChange={(e) => setEnrollStudentId(e.target.value)}
-                  required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">Select Student Account</option>
-                  {studentsList.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <Button type="submit" disabled={enrollStudentMutation.isPending} className="w-full text-xs">
+              <Button type="submit" disabled={enrollStudentMutation.isPending} className="w-full text-xs mt-auto">
                 Enroll Student
               </Button>
             </form>
