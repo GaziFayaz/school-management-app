@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Download,
   FileText,
@@ -225,17 +224,17 @@ export default function PdfPreviewGradingModal({
                 </div>
 
                 {errorMsg && (
-                  <Alert variant="destructive" className="py-2 text-xs">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <AlertDescription>{errorMsg}</AlertDescription>
-                  </Alert>
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-xs animate-in fade-in duration-200">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-destructive" />
+                    <span className="font-medium">{errorMsg}</span>
+                  </div>
                 )}
 
                 {successMsg && (
-                  <Alert className="py-2 text-xs border-primary/30 bg-primary/10 text-primary">
-                    <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                    <AlertDescription className="text-primary font-medium">{successMsg}</AlertDescription>
-                  </Alert>
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-primary/30 bg-primary/10 text-primary text-xs font-medium animate-in fade-in duration-200">
+                    <CheckCircle className="w-4 h-4 shrink-0 text-primary" />
+                    <span>{successMsg}</span>
+                  </div>
                 )}
               </form>
             </div>

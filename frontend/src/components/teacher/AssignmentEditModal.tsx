@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Edit, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 
 interface AssignmentEditModalProps {
@@ -188,10 +187,10 @@ export default function AssignmentEditModal({
           </div>
 
           {errorMsg && (
-            <Alert variant="destructive" className="py-2 text-xs">
-              <AlertCircle className="h-3.5 w-3.5" />
-              <AlertDescription>{errorMsg}</AlertDescription>
-            </Alert>
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-xs animate-in fade-in duration-200">
+              <AlertCircle className="w-4 h-4 shrink-0 text-destructive" />
+              <span className="font-medium">{errorMsg}</span>
+            </div>
           )}
 
           <DialogFooter className="pt-3">
