@@ -1,28 +1,47 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import {
+  fetchTeacherAllocations,
+  createTeacherAssignment,
+} from '@/lib/api-teacher';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
-import PdfPreviewModal from '@/components/pdf/PdfPreviewModal';
-import GradingModal from '@/components/teacher/GradingModal';
-import { BookOpen, Plus, Eye, CheckCircle, FileText, Calendar, Award, X, Edit } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import TeacherOverviewTab from '@/components/teacher/TeacherOverviewTab';
+import TeacherAssignmentsTab from '@/components/teacher/TeacherAssignmentsTab';
+import TeacherClassesTab from '@/components/teacher/TeacherClassesTab';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { getFileUrl } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  BookOpen,
+  Plus,
+  BarChart3,
+  FileText,
+  School,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+} from 'lucide-react';
 
-export default function TeacherDashboard() {
+function TeacherDashboardContent() {
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
 
-  // Modal Preview & Grade States
-  const [previewPdf, setPreviewPdf] = useState<{ url: string; name: string } | null>(null);
-  const [gradingSubmission, setGradingSubmission] = useState<any | null>(null);
+  const tabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<string>(tabParam || 'overview');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -32,35 +51,31 @@ export default function TeacherDashboard() {
   const [classId, setClassId] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [status, setStatus] = useState<'Draft' | 'Published'>('Published');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // TanStack Queries
-  const { data: assignments = [] } = useQuery({
-    queryKey: ['teacher-assignments'],
-    queryFn: async () => (await apiClient.get('/teacher/assignments')).data,
-  });
+  useEffect(() => {
+    if (tabParam && ['overview', 'assignments', 'classes'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
+  // Fetch Allocations for Assignment Creation
   const { data: allocations = [] } = useQuery({
     queryKey: ['teacher-allocations'],
-    queryFn: async () => (await apiClient.get('/teacher/assignments/my-allocations')).data,
-  });
-
-  const { data: submissions = [] } = useQuery({
-    queryKey: ['teacher-submissions', selectedAssignmentId],
-    queryFn: async () => {
-      if (!selectedAssignmentId) return [];
-      return (await apiClient.get(`/teacher/submissions/assignment/${selectedAssignmentId}`)).data;
-    },
-    enabled: !!selectedAssignmentId,
+    queryFn: fetchTeacherAllocations,
   });
 
   // Create Assignment Mutation
   const createAssignmentMutation = useMutation({
     mutationFn: async () => {
-      return apiClient.post('/teacher/assignments', {
+      if (!classId || !subjectId) {
+        throw new Error('Please select an allocated Class and Subject.');
+      }
+      return createTeacherAssignment({
         title,
         description,
         deadline: new Date(deadline).toISOString(),
-        maxMarks,
+        maxMarks: Number(maxMarks),
         classId,
         subjectId,
         status,
@@ -68,202 +83,141 @@ export default function TeacherDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teacher-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['teacher-overview-stats'] });
       setIsCreateOpen(false);
-      setTitle(''); setDescription(''); setDeadline('');
+      setTitle('');
+      setDescription('');
+      setDeadline('');
+      setMaxMarks(100);
+      setClassId('');
+      setSubjectId('');
+      setErrorMsg(null);
+      setActiveTab('assignments');
+    },
+    onError: (err: any) => {
+      setErrorMsg(err.response?.data?.message || err.message || 'Failed to create assignment.');
     },
   });
 
-  // Toggle Draft / Published Mutation
-  const toggleStatusMutation = useMutation({
-    mutationFn: async ({ id, newStatus }: { id: string; newStatus: string }) => {
-      return apiClient.patch(`/teacher/assignments/${id}/status?status=${newStatus}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teacher-assignments'] });
-    },
-  });
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (!classId || !subjectId) {
+      setErrorMsg('Please select a class and subject allocation.');
+      return;
+    }
+
+    if (maxMarks <= 0) {
+      setErrorMsg('Maximum marks must be greater than 0.');
+      return;
+    }
+
+    createAssignmentMutation.mutate();
+  };
 
   return (
     <ProtectedRoute allowedRoles={['Teacher']}>
-      <div className="space-y-6">
-        {/* Top Header */}
-        <Card className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl">
-              <BookOpen className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Teacher Dashboard</h1>
-              <p className="text-xs text-muted-foreground">Manage assignments, draft/publish status, and grade student PDF submissions</p>
-            </div>
-          </div>
-
-          <Button
-            onClick={() => setIsCreateOpen(true)}
-            size="sm"
-            className="flex items-center gap-1.5 self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" /> Create New Assignment
-          </Button>
-        </Card>
-
-        {/* Content Layout: Assignments List + Submissions Drawer */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Assignments Column */}
-          <div className={`${selectedAssignmentId ? 'lg:col-span-6' : 'lg:col-span-12'} space-y-4 transition-all`}>
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <FileText className="w-4 h-4 text-primary" /> Created Assignments ({assignments.length})
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-              {assignments.map((a: any) => (
-                <Card
-                  key={a.id}
-                  className={`p-5 border transition-all ${
-                    selectedAssignmentId === a.id ? 'border-primary ring-1 ring-primary/30' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <Badge variant="outline" className="text-[10px] font-bold">
-                        {a.className} • {a.subjectName}
-                      </Badge>
-                      <h3 className="text-base font-bold text-foreground mt-1.5">{a.title}</h3>
-                    </div>
-
-                    <Button
-                      variant={a.status === 'Published' ? 'default' : 'secondary'}
-                      size="sm"
-                      onClick={() => toggleStatusMutation.mutate({ id: a.id, newStatus: a.status === 'Published' ? 'Draft' : 'Published' })}
-                      className="h-7 text-[11px]"
-                    >
-                      {a.status}
-                    </Button>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground line-clamp-2 mt-2">{a.description}</p>
-
-                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" /> Due: {new Date(a.deadline).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1 font-semibold text-foreground">
-                      <Award className="w-3.5 h-3.5 text-primary" /> Max: {a.maxMarks} Marks
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-end">
-                    <Button
-                      variant={selectedAssignmentId === a.id ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setSelectedAssignmentId(selectedAssignmentId === a.id ? null : a.id)}
-                      className="text-xs flex items-center gap-1.5"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      {selectedAssignmentId === a.id ? 'Close Submissions' : 'View Student Submissions'}
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Submissions Drawer */}
-          {selectedAssignmentId && (
-            <Card className="lg:col-span-6 p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-primary" /> Student PDF Submissions ({submissions.length})
-                </h3>
-                <Button variant="ghost" size="icon" onClick={() => setSelectedAssignmentId(null)} className="h-7 w-7">
-                  <X className="w-4 h-4" />
-                </Button>
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          {/* Header Card with Tabs List & Primary Action */}
+          <Card className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm border-border/70">
+            <div className="flex items-center space-x-3.5">
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl">
+                <BookOpen className="w-6 h-6 text-primary" />
               </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">Teacher Academic Portal</h1>
+                <p className="text-xs text-muted-foreground">
+                  Coursework management, student PDF submission grading, and class rosters
+                </p>
+              </div>
+            </div>
 
-              {submissions.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-xs">No student submissions received yet.</div>
-              ) : (
-                <div className="space-y-3">
-                  {submissions.map((sub: any) => (
-                    <Card key={sub.id} className="p-4 space-y-2 bg-muted/30">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-sm font-semibold text-foreground">{sub.studentName}</h4>
-                          <span className="text-[11px] text-muted-foreground">{sub.studentEmail}</span>
-                        </div>
-                        <Badge variant={sub.status === 'Graded' ? 'default' : 'secondary'}>
-                          {sub.status}
-                        </Badge>
-                      </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <TabsList className="grid grid-cols-3 h-auto p-1 bg-muted/60">
+                <TabsTrigger value="overview" className="text-xs py-2 px-3 flex items-center gap-1.5 font-medium">
+                  <BarChart3 className="w-3.5 h-3.5" /> Overview
+                </TabsTrigger>
+                <TabsTrigger value="assignments" className="text-xs py-2 px-3 flex items-center gap-1.5 font-medium">
+                  <FileText className="w-3.5 h-3.5" /> Assignments
+                </TabsTrigger>
+                <TabsTrigger value="classes" className="text-xs py-2 px-3 flex items-center gap-1.5 font-medium">
+                  <School className="w-3.5 h-3.5" /> My Classes
+                </TabsTrigger>
+              </TabsList>
 
-                      <div className="flex items-center justify-between bg-card p-2.5 rounded border border-border text-xs">
-                        <span className="text-foreground truncate font-mono">{sub.fileName}</span>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setPreviewPdf({ url: sub.fileUrl, name: sub.fileName })}
-                            className="h-7 text-[11px]"
-                          >
-                            Click to Preview
-                          </Button>
-                          <Button variant="outline" size="sm" asChild className="h-7 text-[11px]">
-                            <a
-                              href={getFileUrl(sub.fileUrl)}
-                              download={sub.fileName}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Download
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
+              <Button
+                onClick={() => {
+                  setErrorMsg(null);
+                  setIsCreateOpen(true);
+                }}
+                size="sm"
+                className="h-9 text-xs flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" /> Create Assignment
+              </Button>
+            </div>
+          </Card>
 
-                      {sub.status === 'Graded' && (
-                        <div className="bg-primary/10 border border-primary/20 p-2.5 rounded text-xs space-y-1">
-                          <div className="font-semibold text-primary">Awarded Marks: {sub.marks} / {sub.assignmentMaxMarks}</div>
-                          {sub.feedback && <div className="text-muted-foreground text-[11px]">Feedback: {sub.feedback}</div>}
-                        </div>
-                      )}
+          {/* Tab Contents */}
+          <TabsContent value="overview" className="m-0 focus-visible:outline-none">
+            <TeacherOverviewTab
+              onCreateAssignment={() => {
+                setErrorMsg(null);
+                setIsCreateOpen(true);
+              }}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+            />
+          </TabsContent>
 
-                      <div className="flex justify-end pt-1">
-                        <Button
-                          size="sm"
-                          onClick={() => setGradingSubmission(sub)}
-                          className="h-8 text-xs flex items-center gap-1"
-                        >
-                          <Edit className="w-3 h-3" /> {sub.status === 'Graded' ? 'Edit Grade' : 'Grade Submission'}
-                        </Button>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </Card>
-          )}
-        </div>
+          <TabsContent value="assignments" className="m-0 focus-visible:outline-none">
+            <TeacherAssignmentsTab
+              onCreateClick={() => {
+                setErrorMsg(null);
+                setIsCreateOpen(true);
+              }}
+            />
+          </TabsContent>
 
-        {/* Create Assignment Modal */}
+          <TabsContent value="classes" className="m-0 focus-visible:outline-none">
+            <TeacherClassesTab />
+          </TabsContent>
+        </Tabs>
+
+        {/* Create Assignment Modal Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Create New Assignment</DialogTitle>
+              <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                <Plus className="w-4 h-4 text-primary" /> Create New Assignment
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground">
+                Set up coursework instructions and deadlines for your allocated class
+              </p>
             </DialogHeader>
 
-            <form onSubmit={(e) => { e.preventDefault(); createAssignmentMutation.mutate(); }} className="space-y-3 py-2">
+            <form onSubmit={handleCreateSubmit} className="space-y-3.5 py-2">
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Class & Subject Allocation</label>
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Class & Subject Allocation <span className="text-destructive">*</span>
+                </label>
                 <select
+                  value={classId && subjectId ? `${classId}|${subjectId}` : ''}
                   onChange={(e) => {
-                    const [cId, sId] = e.target.value.split('|');
-                    setClassId(cId); setSubjectId(sId);
+                    const parts = e.target.value.split('|');
+                    if (parts.length === 2) {
+                      setClassId(parts[0]);
+                      setSubjectId(parts[1]);
+                    } else {
+                      setClassId('');
+                      setSubjectId('');
+                    }
                   }}
                   required
                   className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
-                  <option value="">Select Allocated Class & Subject</option>
+                  <option value="">-- Select Allocated Class & Subject --</option>
                   {allocations.map((alloc: any, i: number) => (
                     <option key={i} value={`${alloc.classId}|${alloc.subjectId}`}>
                       {alloc.className} — {alloc.subjectName}
@@ -273,61 +227,115 @@ export default function TeacherDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Title</label>
-                <Input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Algebra Problem Set 1" />
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Assignment Title <span className="text-destructive">*</span>
+                </label>
+                <Input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Linear Algebra Problem Set 2"
+                  className="text-xs"
+                />
               </div>
 
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Description & Instructions</label>
-                <Textarea rows={3} required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Solve Chapter 3 problems and submit your solution PDF..." className="resize-none" />
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Description & Instructions <span className="text-destructive">*</span>
+                </label>
+                <Textarea
+                  rows={3}
+                  required
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe requirements, problem questions, and instructions for answer PDF uploads..."
+                  className="resize-none text-xs"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Deadline Date & Time</label>
-                  <Input type="datetime-local" required value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+                  <label className="block text-xs font-semibold text-foreground mb-1">
+                    Deadline Date & Time <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    type="datetime-local"
+                    required
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    className="text-xs"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Maximum Marks</label>
-                  <Input type="number" min="1" required value={maxMarks} onChange={(e) => setMaxMarks(parseFloat(e.target.value) || 100)} />
+                  <label className="block text-xs font-semibold text-foreground mb-1">
+                    Maximum Marks <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    min="1"
+                    required
+                    value={maxMarks}
+                    onChange={(e) => setMaxMarks(parseFloat(e.target.value) || 0)}
+                    className="text-xs"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Publish Status</label>
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Initial Publish Status
+                </label>
                 <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as any)}
+                  onChange={(e) => setStatus(e.target.value as 'Draft' | 'Published')}
                   className="w-full bg-background border border-input rounded-md px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
-                  <option value="Published">Publish Immediately</option>
-                  <option value="Draft">Keep as Draft</option>
+                  <option value="Published">Publish Immediately (Visible to students)</option>
+                  <option value="Draft">Save as Draft (Hidden from students)</option>
                 </select>
               </div>
 
+              {errorMsg && (
+                <Alert variant="destructive" className="py-2 text-xs">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <AlertDescription>{errorMsg}</AlertDescription>
+                </Alert>
+              )}
+
               <DialogFooter className="pt-3">
-                <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={createAssignmentMutation.isPending}>Create Assignment</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsCreateOpen(false)} className="text-xs">
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={createAssignmentMutation.isPending}
+                  className="text-xs flex items-center gap-1.5"
+                >
+                  {createAssignmentMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Creating...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5" /> Create Assignment
+                    </>
+                  )}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
-
-        {/* PDF Preview Modal Component */}
-        <PdfPreviewModal
-          isOpen={!!previewPdf}
-          onClose={() => setPreviewPdf(null)}
-          fileUrl={previewPdf?.url || ''}
-          fileName={previewPdf?.name || ''}
-        />
-
-        {/* Teacher Grading Modal Component */}
-        <GradingModal
-          isOpen={!!gradingSubmission}
-          onClose={() => setGradingSubmission(null)}
-          submission={gradingSubmission}
-        />
       </div>
     </ProtectedRoute>
+  );
+}
+
+export default function TeacherDashboard() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-xs text-muted-foreground">Loading dashboard...</div>}>
+      <TeacherDashboardContent />
+    </Suspense>
   );
 }

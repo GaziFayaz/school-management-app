@@ -52,7 +52,7 @@ export default function Navbar() {
           {user.role === 'Teacher' && (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/teacher/dashboard" className="flex items-center gap-1.5 text-sm font-medium">
-                <BookOpen className="w-4 h-4" /> Teacher Assignments
+                <BookOpen className="w-4 h-4" /> Teacher Portal
               </Link>
             </Button>
           )}
