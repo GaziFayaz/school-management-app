@@ -64,7 +64,7 @@ function StudentDashboardContent() {
 
       {/* Multi-Tab Navigation */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto sm:inline-flex p-1 bg-muted/70 border border-border/60 rounded-xl">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto sm:inline-flex p-1 bg-muted/70 border border-border/60">
           <TabsTrigger
             value="overview"
             className="flex items-center gap-2 text-xs sm:text-sm font-medium py-2 px-3 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg transition-all"
