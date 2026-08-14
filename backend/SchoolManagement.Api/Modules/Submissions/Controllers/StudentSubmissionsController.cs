@@ -169,14 +169,18 @@ public class StudentSubmissionsController : ControllerBase
     [AllowAnonymous] // Allows iframe PDF preview & browser downloads
     public async Task<IActionResult> ServeFile([FromQuery] string key)
     {
-        var localPath = Path.Combine(_env.ContentRootPath, "StorageUploads", key);
-        if (System.IO.File.Exists(localPath))
+        if (string.IsNullOrWhiteSpace(key))
         {
-            var bytes = await System.IO.File.ReadAllBytesAsync(localPath);
-            return File(bytes, "application/pdf", enableRangeProcessing: true);
+            return BadRequest(new { message = "File key is required." });
         }
 
-        // Return empty sample PDF placeholder stream if local file missing in dev mode
-        return NotFound(new { message = "Requested PDF file not found on storage." });
+        var fileResult = await _storageService.GetFileStreamAsync(key);
+        if (fileResult == null)
+        {
+            return NotFound(new { message = "Requested PDF file not found on storage." });
+        }
+
+        return File(fileResult.Stream, fileResult.ContentType, enableRangeProcessing: true);
     }
 }
+

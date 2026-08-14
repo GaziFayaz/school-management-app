@@ -157,4 +157,63 @@ public class SubmissionWorkflowTests
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Contains("Marks must be between 0 and maximum marks", badRequest.Value?.ToString());
     }
+
+    [Fact]
+    public async Task ServeFile_EmptyKey_ReturnsBadRequest()
+    {
+        // Arrange
+        using var db = GetInMemoryDbContext();
+        var mockStorage = new Mock<IStorageService>();
+        var mockEnv = new Mock<IWebHostEnvironment>();
+        var controller = new StudentSubmissionsController(db, mockStorage.Object, mockEnv.Object);
+
+        // Act
+        var result = await controller.ServeFile("");
+
+        // Assert
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Contains("File key is required", badRequest.Value?.ToString());
+    }
+
+    [Fact]
+    public async Task ServeFile_FileNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        using var db = GetInMemoryDbContext();
+        var mockStorage = new Mock<IStorageService>();
+        mockStorage.Setup(s => s.GetFileStreamAsync("missing-key.pdf"))
+            .ReturnsAsync((StorageFileResult?)null);
+        var mockEnv = new Mock<IWebHostEnvironment>();
+        var controller = new StudentSubmissionsController(db, mockStorage.Object, mockEnv.Object);
+
+        // Act
+        var result = await controller.ServeFile("missing-key.pdf");
+
+        // Assert
+        var notFound = Assert.IsType<NotFoundObjectResult>(result);
+        Assert.Contains("Requested PDF file not found", notFound.Value?.ToString());
+    }
+
+    [Fact]
+    public async Task ServeFile_FileExists_ReturnsFileStreamResult()
+    {
+        // Arrange
+        using var db = GetInMemoryDbContext();
+        var mockStorage = new Mock<IStorageService>();
+        var sampleBytes = new byte[] { 0x25, 0x50, 0x44, 0x46 }; // %PDF
+        var ms = new MemoryStream(sampleBytes);
+        mockStorage.Setup(s => s.GetFileStreamAsync("valid-key.pdf"))
+            .ReturnsAsync(new StorageFileResult(ms, "application/pdf"));
+        var mockEnv = new Mock<IWebHostEnvironment>();
+        var controller = new StudentSubmissionsController(db, mockStorage.Object, mockEnv.Object);
+
+        // Act
+        var result = await controller.ServeFile("valid-key.pdf");
+
+        // Assert
+        var fileResult = Assert.IsType<FileStreamResult>(result);
+        Assert.Equal("application/pdf", fileResult.ContentType);
+        Assert.True(fileResult.EnableRangeProcessing);
+    }
 }
+

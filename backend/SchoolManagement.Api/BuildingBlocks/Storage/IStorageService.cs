@@ -5,6 +5,9 @@ public interface IStorageService
     Task<StorageUploadResult> UploadPdfAsync(Stream fileStream, string originalFileName, long fileSize);
     Task DeleteFileAsync(string fileKey);
     string GetPublicUrl(string fileKey);
+    Task<StorageFileResult?> GetFileStreamAsync(string fileKey);
 }
 
 public record StorageUploadResult(string FileUrl, string FileKey, string FileName, long FileSize);
+public record StorageFileResult(Stream Stream, string ContentType);
+
