@@ -107,20 +107,22 @@ export default function StudentGradesTab() {
         header: 'Assignment & Subject',
         accessorKey: 'assignmentTitle',
         sortable: true,
+        headerClassName: 'min-w-[240px]',
+        className: 'min-w-[240px]',
         cell: (item) => (
-          <div className="space-y-1 py-1">
+          <div className="space-y-1 py-0.5">
             <Link
               href={`/student/assignments/${item.assignmentId}`}
-              className="text-xs font-semibold text-foreground hover:text-primary transition-colors block"
+              className="text-xs font-semibold text-foreground hover:text-primary transition-colors block leading-tight"
             >
               {item.assignmentTitle}
             </Link>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Badge variant="outline" className="text-[10px] font-mono px-1 py-0 h-4">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
+              <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0 h-4 whitespace-nowrap shrink-0">
                 {item.subjectName}
               </Badge>
               <span>•</span>
-              <span>{item.className}</span>
+              <span className="whitespace-nowrap">{item.className}</span>
             </div>
           </div>
         ),
@@ -129,9 +131,11 @@ export default function StudentGradesTab() {
         header: 'Instructor',
         accessorKey: 'teacherName',
         sortable: true,
+        headerClassName: 'min-w-[130px] whitespace-nowrap',
+        className: 'min-w-[130px] whitespace-nowrap',
         cell: (item) => (
           <div className="text-xs text-foreground font-medium flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-muted-foreground" />
+            <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <span>{item.teacherName}</span>
           </div>
         ),
@@ -140,9 +144,11 @@ export default function StudentGradesTab() {
         header: 'Submitted',
         accessorKey: 'submittedAt',
         sortable: true,
+        headerClassName: 'min-w-[115px] whitespace-nowrap',
+        className: 'min-w-[115px] whitespace-nowrap',
         cell: (item) => (
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5" />
+            <Calendar className="w-3.5 h-3.5 shrink-0" />
             <span>{new Date(item.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
         ),
@@ -151,6 +157,8 @@ export default function StudentGradesTab() {
         header: 'Marks Awarded',
         accessorKey: 'marks',
         sortable: true,
+        headerClassName: 'min-w-[115px] whitespace-nowrap',
+        className: 'min-w-[115px] whitespace-nowrap',
         cell: (item) => {
           if (item.marks === null || item.marks === undefined) {
             return <span className="text-xs text-muted-foreground italic">Pending</span>;
@@ -166,10 +174,12 @@ export default function StudentGradesTab() {
         header: 'Score %',
         accessorKey: 'percentage',
         sortable: true,
+        headerClassName: 'min-w-[85px] whitespace-nowrap',
+        className: 'min-w-[85px] whitespace-nowrap',
         cell: (item) => {
           if (item.percentage === null || item.percentage === undefined) {
             return (
-              <Badge variant="secondary" className="text-[10px]">
+              <Badge variant="secondary" className="text-[10px] whitespace-nowrap font-medium">
                 Under Review
               </Badge>
             );
@@ -178,27 +188,29 @@ export default function StudentGradesTab() {
           const pct = item.percentage;
           if (pct >= 80) {
             return (
-              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px]">
-                {pct}% Distinction
+              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] whitespace-nowrap">
+                {pct}%
               </Badge>
             );
           }
           if (pct >= 50) {
             return (
-              <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-[10px]">
-                {pct}% Pass
+              <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-[10px] whitespace-nowrap">
+                {pct}%
               </Badge>
             );
           }
           return (
-            <Badge variant="destructive" className="font-bold text-[10px]">
-              {pct}% Needs Work
+            <Badge variant="destructive" className="font-bold text-[10px] whitespace-nowrap">
+              {pct}%
             </Badge>
           );
         },
       },
       {
         header: 'Teacher Feedback',
+        headerClassName: 'min-w-[200px]',
+        className: 'min-w-[200px]',
         cell: (item) => {
           if (!item.feedback) {
             return <span className="text-xs text-muted-foreground italic">None provided</span>;
@@ -206,7 +218,7 @@ export default function StudentGradesTab() {
           return (
             <button
               onClick={() => setSelectedFeedback(item)}
-              className="text-xs text-left text-muted-foreground hover:text-foreground line-clamp-1 max-w-xs flex items-center gap-1 group"
+              className="text-xs text-left text-muted-foreground hover:text-foreground line-clamp-1 max-w-[280px] flex items-center gap-1 group"
               title="Click to view full feedback"
             >
               <MessageSquare className="w-3.5 h-3.5 text-primary group-hover:scale-110 transition-transform shrink-0" />
@@ -217,7 +229,8 @@ export default function StudentGradesTab() {
       },
       {
         header: 'Submitted File',
-        className: 'text-right',
+        headerClassName: 'text-right min-w-[130px] whitespace-nowrap',
+        className: 'text-right min-w-[130px] whitespace-nowrap',
         cell: (item) => (
           <div className="flex items-center justify-end gap-1.5">
             {item.fileUrl && (
@@ -226,12 +239,12 @@ export default function StudentGradesTab() {
                   variant="outline"
                   size="sm"
                   onClick={() => setPreviewPdf({ url: item.fileUrl, name: item.fileName })}
-                  className="h-7 px-2 text-xs"
+                  className="h-7 px-2 text-xs shrink-0"
                   title="Preview PDF"
                 >
                   <Eye className="w-3.5 h-3.5 text-primary mr-1" /> Preview
                 </Button>
-                <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0" title="Download PDF">
+                <Button variant="ghost" size="sm" asChild className="h-7 w-7 p-0 shrink-0" title="Download PDF">
                   <a href={getFileUrl(item.fileUrl)} download={item.fileName} target="_blank" rel="noopener noreferrer">
                     <Download className="w-3.5 h-3.5" />
                   </a>

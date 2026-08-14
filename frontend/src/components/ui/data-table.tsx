@@ -187,10 +187,10 @@ export function DataTable<T extends Record<string, any>>({
                     <button
                       type="button"
                       onClick={() => handleSort(col.accessorKey as string)}
-                      className="flex items-center gap-1 hover:text-primary transition-colors focus:outline-none"
+                      className="flex items-center gap-1 hover:text-primary transition-colors focus:outline-none whitespace-nowrap"
                     >
                       <span>{col.header}</span>
-                      <ArrowUpDown className="w-3 h-3 text-muted-foreground" />
+                      <ArrowUpDown className="w-3 h-3 text-muted-foreground shrink-0" />
                     </button>
                   ) : (
                     col.header

@@ -119,20 +119,22 @@ export default function StudentAssignmentsTab() {
         header: 'Assignment & Subject',
         accessorKey: 'title',
         sortable: true,
+        headerClassName: 'min-w-[240px]',
+        className: 'min-w-[240px]',
         cell: (item) => (
-          <div className="space-y-1 py-1">
+          <div className="space-y-1 py-0.5">
             <Link
               href={`/student/assignments/${item.id}`}
-              className="text-xs font-semibold text-foreground hover:text-primary transition-colors block"
+              className="text-xs font-semibold text-foreground hover:text-primary transition-colors block leading-tight"
             >
               {item.title}
             </Link>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Badge variant="outline" className="text-[10px] font-mono px-1 py-0 h-4">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground flex-wrap">
+              <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0 h-4 whitespace-nowrap shrink-0">
                 {item.subjectName}
               </Badge>
               <span>•</span>
-              <span>{item.className}</span>
+              <span className="whitespace-nowrap">{item.className}</span>
             </div>
           </div>
         ),
@@ -141,9 +143,11 @@ export default function StudentAssignmentsTab() {
         header: 'Instructor',
         accessorKey: 'teacherName',
         sortable: true,
+        headerClassName: 'min-w-[130px] whitespace-nowrap',
+        className: 'min-w-[130px] whitespace-nowrap',
         cell: (item) => (
           <div className="text-xs text-foreground font-medium flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5 text-muted-foreground" />
+            <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <span>{item.teacherName}</span>
           </div>
         ),
@@ -152,12 +156,14 @@ export default function StudentAssignmentsTab() {
         header: 'Due Date',
         accessorKey: 'deadline',
         sortable: true,
+        headerClassName: 'min-w-[125px] whitespace-nowrap',
+        className: 'min-w-[125px] whitespace-nowrap',
         cell: (item) => {
           const isPast = new Date(item.deadline) < new Date();
           return (
             <div className="text-xs space-y-0.5">
               <div className="flex items-center gap-1 text-foreground">
-                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 <span>{new Date(item.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
               <p className={`text-[10px] ${isPast && !item.isSubmitted ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
@@ -171,8 +177,10 @@ export default function StudentAssignmentsTab() {
         header: 'Max Marks',
         accessorKey: 'maxMarks',
         sortable: true,
+        headerClassName: 'min-w-[100px] whitespace-nowrap',
+        className: 'min-w-[100px] whitespace-nowrap',
         cell: (item) => (
-          <Badge variant="secondary" className="font-mono text-xs">
+          <Badge variant="secondary" className="font-mono text-xs whitespace-nowrap">
             {item.maxMarks} pts
           </Badge>
         ),
@@ -180,39 +188,42 @@ export default function StudentAssignmentsTab() {
       {
         header: 'Status',
         accessorKey: 'submissionStatus',
+        headerClassName: 'min-w-[110px] whitespace-nowrap',
+        className: 'min-w-[110px] whitespace-nowrap',
         cell: (item) => {
           const isPast = new Date(item.deadline) < new Date();
           if (item.submissionStatus === 'Graded') {
             return (
-              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-medium">
-                <Award className="w-3 h-3 mr-1" /> {item.marks} / {item.maxMarks}
+              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-medium whitespace-nowrap">
+                <Award className="w-3 h-3 mr-1 shrink-0" /> {item.marks} / {item.maxMarks}
               </Badge>
             );
           }
           if (item.isSubmitted) {
             return (
-              <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-medium">
-                <CheckCircle2 className="w-3 h-3 mr-1" /> Submitted
+              <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-medium whitespace-nowrap">
+                <CheckCircle2 className="w-3 h-3 mr-1 shrink-0" /> Submitted
               </Badge>
             );
           }
           if (isPast) {
             return (
-              <Badge variant="destructive" className="text-[10px] font-medium">
-                <AlertTriangle className="w-3 h-3 mr-1" /> Overdue
+              <Badge variant="destructive" className="text-[10px] font-medium whitespace-nowrap">
+                <AlertTriangle className="w-3 h-3 mr-1 shrink-0" /> Overdue
               </Badge>
             );
           }
           return (
-            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[10px] font-medium">
-              <Clock className="w-3 h-3 mr-1" /> Pending
+            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[10px] font-medium whitespace-nowrap">
+              <Clock className="w-3 h-3 mr-1 shrink-0" /> Pending
             </Badge>
           );
         },
       },
       {
         header: 'Action',
-        className: 'text-right',
+        headerClassName: 'text-right min-w-[120px] whitespace-nowrap',
+        className: 'text-right min-w-[120px] whitespace-nowrap',
         cell: (item) => (
           <div className="flex items-center justify-end gap-1.5">
             {item.fileUrl && (
@@ -220,13 +231,13 @@ export default function StudentAssignmentsTab() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setPreviewPdf({ url: item.fileUrl!, name: item.fileName || 'submission.pdf' })}
-                className="h-7 px-2 text-xs"
+                className="h-7 px-2 text-xs shrink-0"
                 title="Preview PDF"
               >
                 <Eye className="w-3.5 h-3.5 text-primary" />
               </Button>
             )}
-            <Button asChild size="sm" className="h-7 text-xs px-2.5">
+            <Button asChild size="sm" className="h-7 text-xs px-2.5 shrink-0">
               <Link href={`/student/assignments/${item.id}`}>
                 {item.isSubmitted ? 'View' : 'Submit'}
               </Link>
