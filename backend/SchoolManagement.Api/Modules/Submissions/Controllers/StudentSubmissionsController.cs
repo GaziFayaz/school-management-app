@@ -82,6 +82,109 @@ public class StudentSubmissionsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("assignment/{assignmentId}")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetAssignmentDetails(Guid assignmentId)
+    {
+        var studentId = GetUserId();
+
+        var assignment = await _db.Assignments
+            .Include(a => a.Class)
+            .Include(a => a.Subject)
+            .Include(a => a.Teacher)
+            .FirstOrDefaultAsync(a => a.Id == assignmentId && a.Status == AssignmentStatus.Published);
+
+        if (assignment == null)
+        {
+            return NotFound(new { message = "Assignment not found." });
+        }
+
+        // Verify student is enrolled in the class
+        var isEnrolled = await _db.ClassStudents
+            .AnyAsync(cs => cs.ClassId == assignment.ClassId && cs.StudentId == studentId);
+
+        if (!isEnrolled)
+        {
+            return StatusCode(403, new { message = "You are not enrolled in the class for this assignment." });
+        }
+
+        var submission = await _db.Submissions
+            .FirstOrDefaultAsync(s => s.AssignmentId == assignmentId && s.StudentId == studentId);
+
+        return Ok(new
+        {
+            assignment.Id,
+            assignment.Title,
+            assignment.Description,
+            assignment.Deadline,
+            assignment.MaxMarks,
+            assignment.Status,
+            ClassId = assignment.Class.Id,
+            ClassName = assignment.Class.Name,
+            ClassGradeLevel = assignment.Class.GradeLevel,
+            SubjectId = assignment.Subject.Id,
+            SubjectName = assignment.Subject.Name,
+            SubjectCode = assignment.Subject.Code,
+            TeacherId = assignment.Teacher.Id,
+            TeacherName = assignment.Teacher.Name,
+            TeacherEmail = assignment.Teacher.Email,
+            IsSubmitted = submission != null,
+            SubmissionId = submission?.Id,
+            SubmissionStatus = submission?.Status.ToString(),
+            SubmittedAt = submission?.SubmittedAt,
+            FileName = submission?.FileName,
+            FileUrl = submission?.FileUrl,
+            FileSize = submission?.FileSize,
+            Marks = submission?.Marks,
+            Feedback = submission?.Feedback,
+            CreatedAt = assignment.CreatedAt
+        });
+    }
+
+    [HttpGet("grades")]
+    [Authorize(Roles = "Student")]
+    public async Task<IActionResult> GetStudentGrades()
+    {
+        var studentId = GetUserId();
+
+        var submissions = await _db.Submissions
+            .Include(s => s.Assignment)
+                .ThenInclude(a => a.Class)
+            .Include(s => s.Assignment)
+                .ThenInclude(a => a.Subject)
+            .Include(s => s.Assignment)
+                .ThenInclude(a => a.Teacher)
+            .Where(s => s.StudentId == studentId)
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToListAsync();
+
+        var result = submissions.Select(s => new
+        {
+            SubmissionId = s.Id,
+            AssignmentId = s.AssignmentId,
+            AssignmentTitle = s.Assignment.Title,
+            MaxMarks = s.Assignment.MaxMarks,
+            ClassName = s.Assignment.Class.Name,
+            ClassGradeLevel = s.Assignment.Class.GradeLevel,
+            SubjectName = s.Assignment.Subject.Name,
+            SubjectCode = s.Assignment.Subject.Code,
+            TeacherName = s.Assignment.Teacher.Name,
+            TeacherEmail = s.Assignment.Teacher.Email,
+            SubmittedAt = s.SubmittedAt,
+            FileName = s.FileName,
+            FileUrl = s.FileUrl,
+            FileSize = s.FileSize,
+            Status = s.Status.ToString(),
+            Marks = s.Marks,
+            Percentage = s.Marks.HasValue && s.Assignment.MaxMarks > 0
+                ? Math.Round((double)(s.Marks.Value / s.Assignment.MaxMarks) * 100, 1)
+                : (double?)null,
+            Feedback = s.Feedback
+        });
+
+        return Ok(result);
+    }
+
     [HttpPost]
     [Authorize(Roles = "Student")]
     [RequestSizeLimit(10 * 1024 * 1024)] // 10MB limit
