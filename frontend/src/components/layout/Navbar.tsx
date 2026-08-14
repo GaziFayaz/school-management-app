@@ -59,7 +59,7 @@ export default function Navbar() {
           {user.role === 'Student' && (
             <Button variant="ghost" size="sm" asChild>
               <Link href="/student/dashboard" className="flex items-center gap-1.5 text-sm font-medium">
-                <GraduationCap className="w-4 h-4" /> My Assignments
+                <GraduationCap className="w-4 h-4" /> Student Portal
               </Link>
             </Button>
           )}

@@ -1,222 +1,140 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
-import PdfUploader from '@/components/pdf/PdfUploader';
-import PdfPreviewModal from '@/components/pdf/PdfPreviewModal';
-import { GraduationCap, Award, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import StudentOverviewTab from '@/components/student/StudentOverviewTab';
+import StudentAssignmentsTab from '@/components/student/StudentAssignmentsTab';
+import StudentClassesTab from '@/components/student/StudentClassesTab';
+import StudentGradesTab from '@/components/student/StudentGradesTab';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { getFileUrl } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  GraduationCap,
+  LayoutDashboard,
+  FileText,
+  School,
+  Award,
+  Loader2,
+} from 'lucide-react';
 
-export default function StudentDashboard() {
-  const queryClient = useQueryClient();
-  const [submittingAssignment, setSubmittingAssignment] = useState<any | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewPdf, setPreviewPdf] = useState<{ url: string; name: string } | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+function StudentDashboardContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  // TanStack Query: Fetch student's enrolled assignments
-  const { data: assignments = [], isLoading } = useQuery({
-    queryKey: ['student-assignments'],
-    queryFn: async () => (await apiClient.get('/student/submissions/my-assignments')).data,
-  });
+  const tabParam = searchParams.get('tab');
+  const validTabs = ['overview', 'assignments', 'classes', 'grades'];
+  const [activeTab, setActiveTab] = useState<string>(
+    tabParam && validTabs.includes(tabParam) ? tabParam : 'overview'
+  );
 
-  // Submit PDF Mutation
-  const submitPdfMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedFile || !submittingAssignment) return;
-      const formData = new FormData();
-      formData.append('assignmentId', submittingAssignment.id);
-      formData.append('file', selectedFile);
+  useEffect(() => {
+    if (tabParam && validTabs.includes(tabParam) && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
-      const res = await apiClient.post('/student/submissions', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['student-assignments'] });
-      setSubmittingAssignment(null);
-      setSelectedFile(null);
-    },
-    onError: (err: any) => {
-      setErrorMsg(err.response?.data?.message || 'Failed to submit assignment.');
-    },
-  });
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    const params = new URLSearchParams(window.location.search);
+    params.set('tab', val);
+    router.replace(`/student/dashboard?${params.toString()}`, { scroll: false });
+  };
 
   return (
-    <ProtectedRoute allowedRoles={['Student']}>
-      <div className="space-y-6">
-        {/* Header */}
-        <Card className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl">
-              <GraduationCap className="w-6 h-6 text-primary" />
+    <div className="max-w-7xl mx-auto space-y-6 pb-16 px-4 sm:px-6">
+      {/* Header Banner */}
+      <Card className="p-5 sm:p-6 border border-border/80 shadow-sm bg-gradient-to-r from-card via-card to-muted/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3.5">
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl text-primary shrink-0">
+              <GraduationCap className="w-7 h-7" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Student Dashboard</h1>
-              <p className="text-xs text-muted-foreground">View enrolled assignments, submit PDF answers, preview submissions, and track grades</p>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                Student Academic Portal
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Manage your coursework assignments, PDF submissions, curriculum subjects, and academic grades
+              </p>
             </div>
           </div>
-        </Card>
+        </div>
+      </Card>
 
-        {/* Assignments List */}
-        {isLoading ? (
-          <div className="py-12 text-center text-xs text-muted-foreground">Loading assignments...</div>
-        ) : assignments.length === 0 ? (
-          <Card className="p-12 text-center text-muted-foreground text-xs">
-            No active assignments found for your enrolled classes.
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assignments.map((a: any) => {
-              const isPastDeadline = new Date() > new Date(a.deadline);
+      {/* Multi-Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto sm:inline-flex p-1 bg-muted/70 border border-border/60 rounded-xl">
+          <TabsTrigger
+            value="overview"
+            className="flex items-center gap-2 text-xs sm:text-sm font-medium py-2 px-3 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg transition-all"
+          >
+            <LayoutDashboard className="w-4 h-4 text-primary" />
+            <span>Overview</span>
+          </TabsTrigger>
 
-              return (
-                <Card key={a.id} className="p-6 flex flex-col justify-between space-y-4 hover:border-primary/50 transition-all">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-[10px] font-bold">
-                        {a.className} • {a.subjectName}
-                      </Badge>
-                      {a.isSubmitted ? (
-                        <Badge variant={a.submissionStatus === 'Graded' ? 'default' : 'secondary'}>
-                          {a.submissionStatus === 'Graded' ? 'Graded' : 'Submitted'}
-                        </Badge>
-                      ) : (
-                        <Badge variant={isPastDeadline ? 'destructive' : 'secondary'}>
-                          {isPastDeadline ? 'Overdue' : 'Pending'}
-                        </Badge>
-                      )}
-                    </div>
+          <TabsTrigger
+            value="assignments"
+            className="flex items-center gap-2 text-xs sm:text-sm font-medium py-2 px-3 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg transition-all"
+          >
+            <FileText className="w-4 h-4 text-blue-500" />
+            <span>Assignments</span>
+          </TabsTrigger>
 
-                    <h3 className="text-base font-bold text-foreground">{a.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-3">{a.description}</p>
-                  </div>
+          <TabsTrigger
+            value="classes"
+            className="flex items-center gap-2 text-xs sm:text-sm font-medium py-2 px-3 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg transition-all"
+          >
+            <School className="w-4 h-4 text-amber-500" />
+            <span>Classes & Subjects</span>
+          </TabsTrigger>
 
-                  <div className="space-y-3 pt-3 border-t border-border">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {new Date(a.deadline).toLocaleDateString()}
-                      </span>
-                      <span className="font-semibold text-foreground">Max: {a.maxMarks} Marks</span>
-                    </div>
+          <TabsTrigger
+            value="grades"
+            className="flex items-center gap-2 text-xs sm:text-sm font-medium py-2 px-3 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg transition-all"
+          >
+            <Award className="w-4 h-4 text-emerald-500" />
+            <span>Grades & Feedback</span>
+          </TabsTrigger>
+        </TabsList>
 
-                    {/* Submission status or Grade details */}
-                    {a.isSubmitted ? (
-                      <Card className="p-3 bg-muted/40 space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-foreground font-mono truncate max-w-[150px]">{a.fileName}</span>
-                          
-                          <div className="flex items-center space-x-1.5">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => setPreviewPdf({ url: a.fileUrl, name: a.fileName })}
-                              className="h-6 text-[10px] px-2"
-                            >
-                              Preview
-                            </Button>
-                            <Button variant="outline" size="sm" asChild className="h-6 w-6 p-0">
-                              <a
-                                href={getFileUrl(a.fileUrl)}
-                                download={a.fileName}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <Download className="w-3 h-3" />
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
+        {/* Tab 1: Overview */}
+        <TabsContent value="overview" className="mt-0 focus-visible:outline-none">
+          <StudentOverviewTab onNavigateTab={handleTabChange} />
+        </TabsContent>
 
-                        {a.submissionStatus === 'Graded' && (
-                          <div className="bg-primary/10 border border-primary/20 p-2.5 rounded text-xs space-y-1">
-                            <div className="font-bold text-primary flex items-center gap-1">
-                              <Award className="w-3.5 h-3.5" /> Grade: {a.marks} / {a.maxMarks}
-                            </div>
-                            {a.feedback && <div className="text-muted-foreground text-[11px]">Feedback: {a.feedback}</div>}
-                          </div>
-                        )}
-                      </Card>
-                    ) : null}
+        {/* Tab 2: Assignments */}
+        <TabsContent value="assignments" className="mt-0 focus-visible:outline-none">
+          <StudentAssignmentsTab />
+        </TabsContent>
 
-                    {/* Submit / Re-submit Button */}
-                    {a.submissionStatus !== 'Graded' && !isPastDeadline && (
-                      <Button
-                        onClick={() => { setSubmittingAssignment(a); setSelectedFile(null); setErrorMsg(null); }}
-                        className="w-full text-xs flex items-center justify-center gap-1.5"
-                      >
-                        <Upload className="w-3.5 h-3.5" />
-                        {a.isSubmitted ? 'Resubmit PDF Answer' : 'Submit PDF Answer'}
-                      </Button>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
+        {/* Tab 3: Classes & Subjects */}
+        <TabsContent value="classes" className="mt-0 focus-visible:outline-none">
+          <StudentClassesTab />
+        </TabsContent>
+
+        {/* Tab 4: Grades & Feedback */}
+        <TabsContent value="grades" className="mt-0 focus-visible:outline-none">
+          <StudentGradesTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+export default function StudentDashboardPage() {
+  return (
+    <ProtectedRoute allowedRoles={['Student']}>
+      <Suspense
+        fallback={
+          <div className="py-24 flex flex-col items-center justify-center space-y-3 text-muted-foreground text-xs">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span>Loading Student Portal...</span>
           </div>
-        )}
-
-        {/* Submit PDF Modal */}
-        <Dialog open={!!submittingAssignment} onOpenChange={(open) => !open && setSubmittingAssignment(null)}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Submit Answer PDF</DialogTitle>
-              <p className="text-xs text-muted-foreground">{submittingAssignment?.title}</p>
-            </DialogHeader>
-
-            <div className="py-2 space-y-4">
-              <PdfUploader
-                onFileSelect={(file) => setSelectedFile(file)}
-                isUploading={submitPdfMutation.isPending}
-              />
-
-              {errorMsg && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{errorMsg}</AlertDescription>
-                </Alert>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setSubmittingAssignment(null)}>
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                disabled={!selectedFile || submitPdfMutation.isPending}
-                onClick={() => submitPdfMutation.mutate()}
-              >
-                {submitPdfMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> Submitting...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-3.5 h-3.5 mr-1" /> Submit to Teacher
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* PDF Preview Modal */}
-        <PdfPreviewModal
-          isOpen={!!previewPdf}
-          onClose={() => setPreviewPdf(null)}
-          fileUrl={previewPdf?.url || ''}
-          fileName={previewPdf?.name || ''}
-        />
-      </div>
+        }
+      >
+        <StudentDashboardContent />
+      </Suspense>
     </ProtectedRoute>
   );
 }
