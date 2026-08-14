@@ -35,7 +35,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <GraduationCap className="h-7 w-7 text-primary" />
-          <span className="font-bold text-lg tracking-tight">EduAssign Portal</span>
+          <span className="font-bold text-lg tracking-tight">School Management App</span>
           <Badge variant="secondary" className="font-medium">
             {user.role}
           </Badge>

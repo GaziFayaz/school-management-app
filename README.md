@@ -1,4 +1,4 @@
-# Assignment & Submission Management System
+# School Management App
 
 [![.NET](https://img.shields.io/badge/.NET-10.0%20%2F%208.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.0-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
@@ -9,7 +9,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Tests](https://img.shields.io/badge/Unit_Tests-28%20Passing-brightgreen?logo=xunit&logoColor=white)](backend/SchoolManagement.Tests)
 
-A comprehensive role-based school and college **Assignment & Submission Management System**. The application streamlines the academic lifecycle across administrators, educators, and learners—providing assignment creation, draft/publishing workflows, PDF answer sheet uploads, in-browser document preview, and grading with teacher feedback.
+A comprehensive role-based **School Management App**. The application streamlines the academic lifecycle across administrators, educators, and learners—providing assignment creation, draft/publishing workflows, PDF answer sheet uploads, in-browser document preview, and grading with teacher feedback.
 
 ---
 
@@ -37,7 +37,7 @@ A comprehensive role-based school and college **Assignment & Submission Manageme
 
 ## 📖 Project Overview
 
-The **Assignment & Submission Management System** is an enterprise-ready web application facilitating role-governed workflows for schools, colleges, and training academies. 
+The **School Management App** is an enterprise-ready web application facilitating role-governed workflows for schools, colleges, and training academies. 
 
 It solves the end-to-end assignment workflow:
 1. **Administrators** establish the institutional structure by creating classes, subjects, user accounts, and mapping teacher allocations and student enrollments.

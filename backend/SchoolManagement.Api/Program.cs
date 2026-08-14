@@ -63,9 +63,9 @@ builder.Services.AddOpenApi(options =>
     {
         document.Info = new OpenApiInfo
         {
-            Title = "School Management System API",
+            Title = "School Management App API",
             Version = "v1",
-            Description = "Role-based School & College Assignment Management System API with JWT Bearer Authentication."
+            Description = "Role-based School Management App API with JWT Bearer Authentication."
         };
 
         var securityScheme = new OpenApiSecurityScheme
@@ -136,7 +136,7 @@ app.MapOpenApi();
 app.MapScalarApiReference(options =>
 {
     options
-        .WithTitle("School Management API Documentation")
+        .WithTitle("School Management App API Documentation")
         .WithTheme(ScalarTheme.Moon)
         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
         .AddPreferredSecuritySchemes("Bearer");

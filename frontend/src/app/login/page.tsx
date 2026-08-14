@@ -74,7 +74,7 @@ export default function LoginPage() {
           <div className="mx-auto inline-flex p-3 bg-primary/10 border border-primary/20 rounded-2xl">
             <GraduationCap className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Assignment Portal</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">School Management App</CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
             Sign in to access your role-based dashboard
           </CardDescription>
