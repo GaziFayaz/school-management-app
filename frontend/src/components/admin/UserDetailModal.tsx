@@ -200,12 +200,25 @@ export default function UserDetailModal({ userId, isOpen, onClose }: UserDetailM
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
-                    <span className="text-[11px] text-muted-foreground block">Enrolled Class</span>
-                    <span className="text-xs font-bold text-foreground">
-                      {userDetail.roleDetails?.enrolledClass
-                        ? `${userDetail.roleDetails.enrolledClass.className} (${userDetail.roleDetails.enrolledClass.gradeLevel})`
-                        : 'Not Enrolled'}
-                    </span>
+                    <span className="text-[11px] text-muted-foreground block mb-1">Enrolled Class(es)</span>
+                    {userDetail.roleDetails?.enrolledClasses && userDetail.roleDetails.enrolledClasses.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 mt-0.5">
+                        {userDetail.roleDetails.enrolledClasses.map((cls) => (
+                          <span
+                            key={cls.classId}
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
+                          >
+                            {cls.className} ({cls.gradeLevel})
+                          </span>
+                        ))}
+                      </div>
+                    ) : userDetail.roleDetails?.enrolledClass ? (
+                      <span className="text-xs font-bold text-foreground">
+                        {userDetail.roleDetails.enrolledClass.className} ({userDetail.roleDetails.enrolledClass.gradeLevel})
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold text-muted-foreground">Not Enrolled</span>
+                    )}
                   </div>
                   <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
                     <span className="text-[11px] text-muted-foreground block">Submissions History</span>

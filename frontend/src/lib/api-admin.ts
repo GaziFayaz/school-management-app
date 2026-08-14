@@ -49,6 +49,11 @@ export interface StudentRoleDetails {
     className: string;
     gradeLevel: string;
   } | null;
+  enrolledClasses?: {
+    classId: string;
+    className: string;
+    gradeLevel: string;
+  }[];
   totalSubmissions: number;
   gradedSubmissions: number;
 }
@@ -66,6 +71,11 @@ export interface AdminUserDetail {
       className: string;
       gradeLevel: string;
     } | null;
+    enrolledClasses?: {
+      classId: string;
+      className: string;
+      gradeLevel: string;
+    }[];
     totalSubmissions?: number;
     gradedSubmissions?: number;
   } | null;
