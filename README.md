@@ -7,7 +7,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.0-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![TanStack Query](https://img.shields.io/badge/TanStack%20Query-v5-FF4154?logo=reactquery&logoColor=white)](https://tanstack.com/query)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Unit_Tests-22%20Passing-brightgreen?logo=xunit&logoColor=white)](backend/SchoolManagement.Tests)
+[![Tests](https://img.shields.io/badge/Unit_Tests-28%20Passing-brightgreen?logo=xunit&logoColor=white)](backend/SchoolManagement.Tests)
 
 A role-based school and college **Assignment & Submission Management System** designed and built for **OnnoRokom Projukti Limited**. The application streamlines the academic lifecycle across administrators, educators, and learners—providing assignment creation, draft/publishing workflows, PDF answer sheet uploads, in-browser document preview, and grading with teacher feedback.
 
@@ -86,14 +86,15 @@ The backend is built with **ASP.NET Core Web API** following a **Modular Vertica
 
 ## 🛠️ Technology Stack
 
-| Layer | Technology | Description |
+| **Layer** | **Technology** | **Description** |
 | :--- | :--- | :--- |
 | **Backend Framework** | **ASP.NET Core 8.0 / .NET 10.0** | High-performance C# RESTful Web API |
 | **Backend Architecture** | **Modular Vertical Slice** | Domain-organized modules (`Auth`, `Users`, `Classes`, `Subjects`, `Allocations`, `Assignments`, `Submissions`, `Overview`) |
 | **Authentication & Auth** | **JWT Bearer & Role Policies** | Token-based authentication with `Admin`, `Teacher`, `Student` authorization |
+| **API Documentation** | **OpenAPI & Scalar Reference** | Modern interactive API reference via `Scalar.AspNetCore` with Bearer auth support |
 | **ORM & Database** | **EF Core 8 / PostgreSQL (Npgsql)** | Relational database mapping with automated EF Core migrations and seeding |
 | **Cloud Object Storage** | **Cloudflare R2 (AWSSDK.S3)** | S3-compatible PDF file storage with local disk fallback |
-| **Backend Testing** | **xUnit & FluentAssertions** | 22 comprehensive unit tests covering auth, allocations, deadlines, file limits, and grading |
+| **Backend Testing** | **xUnit & FluentAssertions** | 28 comprehensive unit tests covering auth, allocations, deadlines, file limits, and grading |
 | **Frontend Framework** | **Next.js 15 (App Router, React 19)** | Server and client components with TypeScript |
 | **Server State & Caching**| **TanStack Query v5 (`@tanstack/react-query`)** | Client caching, optimistic updates, and automatic cache invalidation |
 | **Styling & UI Components**| **Tailwind CSS & Radix UI** | Modern responsive interface, modals, dropdowns, and data tables |
@@ -126,10 +127,10 @@ Working credentials for all three application roles (automatically seeded on fir
 
 The project includes several optional enhancements to streamline evaluation and provide a production-grade experience:
 
-1. **Interactive Swagger / OpenAPI Documentation**:
-   - **Swagger UI**: [http://localhost:5000/swagger](http://localhost:5000/swagger)
-   - **OpenAPI Specification**: `http://localhost:5000/swagger/v1/swagger.json`
-   - *Includes JWT Bearer Authorization header support for testing authenticated endpoints.*
+1. **Interactive OpenAPI & Scalar API Documentation**:
+   - **Scalar API Reference**: [http://localhost:5000/scalar/v1](http://localhost:5000/scalar/v1)
+   - **OpenAPI Schema (JSON)**: `http://localhost:5000/openapi/v1.json`
+   - *Modern, high-performance interactive API documentation with integrated JWT Bearer Authorization header support for testing authenticated endpoints.*
 2. **Containerized PostgreSQL Environment**:
    - Production-ready `docker-compose.yml` pre-configured to launch PostgreSQL 16 on port `5433`.
 3. **Automated Migrations & Rich Seeder**:
@@ -299,7 +300,9 @@ If you have PostgreSQL installed locally on your machine:
    ```
 
 3. The API will start and listen on:
-   - **API Endpoint**: `http://localhost:5000` (or `https://localhost:5001`)
+   - **API Endpoint**: `http://localhost:5000`
+   - **Interactive Scalar API Reference**: [http://localhost:5000/scalar/v1](http://localhost:5000/scalar/v1)
+   - **OpenAPI Schema (JSON)**: [http://localhost:5000/openapi/v1.json](http://localhost:5000/openapi/v1.json)
 
 ---
 
@@ -337,7 +340,7 @@ cd backend
 dotnet test
 ```
 
-### Test Suite Coverage (22 / 22 Tests Passing):
+### Test Suite Coverage (28 / 28 Tests Passing):
 - **Authentication & Authorization (`Auth/AuthTests.cs`)**:
   - Validates JWT generation and claims for `Admin`, `Teacher`, and `Student`.
   - Rejects invalid credentials with `401 Unauthorized`.
@@ -353,6 +356,8 @@ dotnet test
   - Validates grading limits (rejects awarded marks exceeding maximum marks or below 0).
 - **Student Portal Workflows (`Submissions/StudentPortalWorkflowTests.cs`)**:
   - Validates student enrollment scoping and resubmission replacement workflows before deadline.
+- **Validation & Edge Case Resilience (`Validation/ValidationAndResilienceTests.cs`)**:
+  - Validates input boundaries, extreme payloads, assignment query filters, and storage URL builders.
 
 ### 2. Validate Frontend Build & TypeScript
 Navigate to the frontend directory and run:
