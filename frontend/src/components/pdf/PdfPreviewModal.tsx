@@ -4,6 +4,7 @@ import React from 'react';
 import { Download, FileText, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { getFileUrl } from '@/lib/utils';
 
 interface PdfPreviewModalProps {
   isOpen: boolean;
@@ -14,9 +15,7 @@ interface PdfPreviewModalProps {
 
 export default function PdfPreviewModal({ isOpen, onClose, fileUrl, fileName }: PdfPreviewModalProps) {
   // Resolve full stream URL for backend serving
-  const fullFileUrl = fileUrl.startsWith('http')
-    ? fileUrl
-    : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+  const fullFileUrl = getFileUrl(fileUrl);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

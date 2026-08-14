@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { getFileUrl } from '@/lib/utils';
 
 export default function StudentDashboard() {
   const queryClient = useQueryClient();
@@ -124,7 +125,7 @@ export default function StudentDashboard() {
                             </Button>
                             <Button variant="outline" size="sm" asChild className="h-6 w-6 p-0">
                               <a
-                                href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}${a.fileUrl}`}
+                                href={getFileUrl(a.fileUrl)}
                                 download={a.fileName}
                                 target="_blank"
                                 rel="noopener noreferrer"

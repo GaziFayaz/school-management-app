@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { FileText, Calendar, Award, User, BookOpen, Trash2, ExternalLink, Download, Loader2, CheckCircle2, Clock } from 'lucide-react';
+import { getFileUrl } from '@/lib/utils';
 
 interface AssignmentDetailModalProps {
   assignmentId: string | null;
@@ -143,7 +144,7 @@ export default function AssignmentDetailModal({ assignmentId, isOpen, onClose }:
                         <TableCell>
                           {sub.fileUrl ? (
                             <a
-                              href={sub.fileUrl}
+                              href={getFileUrl(sub.fileUrl)}
                               target="_blank"
                               rel="noreferrer"
                               className="text-xs text-primary hover:underline flex items-center gap-1 font-medium"

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { getFileUrl } from '@/lib/utils';
 
 export default function TeacherDashboard() {
   const queryClient = useQueryClient();
@@ -209,7 +210,7 @@ export default function TeacherDashboard() {
                           </Button>
                           <Button variant="outline" size="sm" asChild className="h-7 text-[11px]">
                             <a
-                              href={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api'}${sub.fileUrl}`}
+                              href={getFileUrl(sub.fileUrl)}
                               download={sub.fileName}
                               target="_blank"
                               rel="noopener noreferrer"
